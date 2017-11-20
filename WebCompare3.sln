@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebCompare3", "WebCompare3\WebCompare3.csproj", "{021A056D-1D6D-4CE2-A5DA-DF1FCE130E65}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{021A056D-1D6D-4CE2-A5DA-DF1FCE130E65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{021A056D-1D6D-4CE2-A5DA-DF1FCE130E65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{021A056D-1D6D-4CE2-A5DA-DF1FCE130E65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{021A056D-1D6D-4CE2-A5DA-DF1FCE130E65}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
