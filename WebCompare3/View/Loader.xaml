@@ -1,0 +1,34 @@
+﻿<Window x:Class="WebCompare3.View.Loader"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        
+        xmlns:local="clr-namespace:WebCompare3.View"
+        mc:Ignorable="d"
+        Title="Loader" Height="450" Width="300">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: Text -->
+        <TextBlock Margin="5,0,0,0" TextWrapping="Wrap">Select <Bold>Load</Bold> to load all stored program data. 
+            Select <Bold>Start</Bold> to begin program.</TextBlock>
+
+        <!-- Row 1: Buttons -->
+        <CheckBox IsChecked="{Binding UpdateIsChecked}" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">Update</CheckBox>
+        <Button Command="{Binding LoadCommand}" HorizontalAlignment="Left" Width="50" Height="20" Margin="30,0,0,0" Background="MediumSpringGreen" Grid.Row="1">Load</Button>
+        <Button Command="{Binding StartCommand}" HorizontalAlignment="Right" Width="50" Height="20" Margin="0,0,30,0" Background="MediumSpringGreen" Grid.Row="1">Start</Button>
+
+        <!-- Row 2: Status Bar 
+        <ProgressBar Grid.Row="2" Height="25" Width="250" HorizontalAlignment="Stretch">
+        </ProgressBar>-->
+
+        <!-- Row 3: Status Box -->
+        <TextBox Name="tbLoaderStatus" TextChanged="TextBoxLoaderStatus_TextChanged" Text="{Binding LoadStatus}" IsReadOnly="False" Grid.Row="3" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" />
+
+    </Grid>
+</Window>
