@@ -17,6 +17,7 @@ namespace WebCompare3.Model
     {
         private HEntry[] table;
         private int tableSize = 32;
+        private int id;
         private int count;
         private double similarity;
         private string url, name;
@@ -177,6 +178,17 @@ namespace WebCompare3.Model
             set
             {
                 table = value;
+            }
+        }
+        public int ID
+        {
+            get
+            {
+                return id;
+            }
+            set
+            {
+                id = value;
             }
         }
         public int TableSize

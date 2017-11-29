@@ -88,47 +88,6 @@ namespace WebCompare3.Model
             return output;
         }
 
-
-        // HTMPAglityPack Get
-        public static string[] GetWebDataAgility(string url)
-        {
-            string data = "";
-            string[] output = null;
-            try
-            {
-                var webGet = new HtmlWeb();
-                var doc = webGet.Load(url);
-                string title = "";
-
-                // Title
-                var node = doc.DocumentNode.SelectSingleNode("//title");
-                if (node != null) title = node.InnerText;
-                // Paragraphs
-                var nodes = doc.DocumentNode.SelectNodes("//p");
-                // Invalid data 
-                if (nodes == null)
-                {
-                    Console.WriteLine("Site invalid, no data retrieved.");
-                    return null;
-                }
-                data = title;
-                foreach (var n in nodes)
-                {
-                    data += " " + n.InnerText;
-                }
-
-                // remove random characters
-                data = new string(data
-                        .Where(x => char.IsWhiteSpace(x) || char.IsLetterOrDigit(x))
-                        .ToArray());
-                // split into array
-                output = data.Split(' ');
-            }
-            catch (Exception e) { Console.WriteLine("Error in GetWebDataAgility(): " + e); }
-
-            return output;
-        }
-
         // Similarity Calculation
         // Build Vectors
         public static List<object>[] BuildVector(HTable tableA, HTable tableB)

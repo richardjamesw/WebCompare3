@@ -104,6 +104,7 @@ namespace WebCompare3.Model
 
         #endregion
 
+        #region Node Class
         /// <summary>
         /// Internal Node class
         /// </summary>
@@ -200,6 +201,7 @@ namespace WebCompare3.Model
             }
             #endregion
         }
+        #endregion
 
         /// <summary>
         /// Read a Node from disk
