@@ -18,6 +18,12 @@ namespace WebCompare3.ViewModel
 
         #region Instance Variables
         Graph MainGraph = new Graph();
+        List<Root> roots = new List<Root>();
+        // Stick with ~500 sites per root
+        const int MAXSITES = 200;   // Max sites per root
+        const int MAXSEEDS = 10;   // Max number of sites from each site
+        int count = MAXSITES;
+
         int TableNumber = 0;
         int EdgeNumber = 0;
         public readonly BackgroundWorker loadWorker = new BackgroundWorker();
@@ -136,83 +142,33 @@ namespace WebCompare3.ViewModel
 
         private void loadWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            string[] parsedData = null;
-            
-            int count = 1000;
             try
             {
-                // Start with a random site to seed the graph construction
-                BuildGraph("https://en.wikipedia.org/wiki/Computer_science", null);
+                // Seed site graph construction with Computer Science related sites
+                AddMessage("Root being added.");
+                roots.Add(new Root("Computer Engineering", BuildGraph("https://en.wikipedia.org/wiki/Computer_engineering", null)));
 
-                // create a vertex for 
-                parsedData = WebCompareModel.GetWebDataAgility(site);
-                // Fill a new HTable (frequency table)
-                HTable table = new HTable();
-                table.URL = site;
-                table.Name = site.Substring(30);
-                if (parsedData != null)
-                {
-                    for (int w = 0; w < parsedData.Length; ++w)
-                    {
-                        table.Put(parsedData[w], 1);
-                    }
-                }
-                // Write HTable to file
-                table.SaveTable(TableNumber);
-                // Add HTable to BTree, including write to file
-                Session.Instance.Tree.Insert(TableNumber, table.Name);
-                ++TableNumber;
+                count = MAXSITES;
+                AddMessage("Root being added.");
+                roots.Add(new Root("Computer Performance", BuildGraph("https://en.wikipedia.org/wiki/Computer_performance", null)));
 
+                count = MAXSITES;
+                AddMessage("Root being added.");
+                roots.Add(new Root("Concurrency", BuildGraph("https://en.wikipedia.org/wiki/Concurrency_(computer_science)", null)));
 
+                count = MAXSITES;
+                AddMessage("Root being added.");
+                roots.Add(new Root("Copmuter Networking", BuildGraph("https://en.wikipedia.org/wiki/Computer_network", null)));
+
+                count = MAXSITES;
+                AddMessage("Root being added.");
+                roots.Add(new Root("Computer Security", BuildGraph("https://en.wikipedia.org/wiki/Computer_security", null)));
+
+                // Report number of Spanning Trees for an arbitrary node
 
 
-
-                string[][] AllSites = new string[5][];
-                TableNumber = GetNumberOfKeys() + 1;
-                int sitesRemaining = 1531 - TableNumber;
-                for (int i = 0; i < AllSites.Length; ++i)
-                {
-                    AddMessage($"Getting site list for '{Enum.GetName(typeof (WebCompareModel.SitesEnum), i)}' cluster");
-                    AllSites[i] = WebCompareModel.GetSiteList(WebCompareModel.Websites[i], (sitesRemaining/5));
-                }
-
-                // Build frequency tables from 1000+ sites
-                int sitecateg = 1, statusCount = 1, scx = 1;
-                foreach (string[] sites in AllSites)
-                {
-                    AddMessage("Building frequency tables for cluster.. " + sitecateg);
-                    foreach (string site in sites)
-                    {
-                        // Status display
-                        if (statusCount == 100)
-                        {
-                            AddMessage($"Sites to go..{sites.Count() * 5 - scx + 70}");
-                            statusCount = 0;
-                        } ++statusCount; ++scx;
-
-                        // Get data from website and parse
-                        parsedData = WebCompareModel.GetWebDataAgility(site);
-                        // Fill a new HTable (frequency table)
-                        HTable table = new HTable();
-                        table.URL = site;
-                        table.Name = site.Substring(30);
-                        if (parsedData != null)
-                        {
-                            for (int w = 0; w < parsedData.Length; ++w)
-                            {
-                                table.Put(parsedData[w], 1);
-                            }
-                        }
-                        // Write HTable to file
-                        table.SaveTable(TableNumber);
-                        // Add HTable to BTree, including write to file
-                        Session.Instance.Tree.Insert(TableNumber, table.Name);
-                        ++TableNumber;
-                    }
-                    AddMessage("Completed building frequency table " + sitecateg);
-                    ++sitecateg;
-                } // End AllSites foreach
-            } catch (Exception err) { MessageBox.Show("Exception caught: " + err, "Exception:Loader:loaderWorker_DoWork()", MessageBoxButton.OK, MessageBoxImage.Warning); }
+            } catch (Exception err)
+            { MessageBox.Show("Exception caught: " + err, "Exception:Loader:loaderWorker_DoWork()", MessageBoxButton.OK, MessageBoxImage.Warning); }
         }
 
         private void loadWorker_RunWorkerCompleted(object sender,
@@ -249,48 +205,75 @@ namespace WebCompare3.ViewModel
                 List<string> sites;
                 GetWebDataAgility(site, out parsedData, out sites);
                 // Fill a new HTable (frequency table)
-                HTable table = new HTable();
-                table.ID = ++TableNumber;
-                table.URL = site;
-                table.Name = site.Substring(30);
+                HTable vTable = new HTable();
+                vTable.ID = ++TableNumber;
+                vTable.URL = site;
+                vTable.Name = site.Substring(30);
                 if (parsedData != null)
                 {
                     for (int w = 0; w < parsedData.Count; ++w)
                     {
-                        table.Put(parsedData[w], 1);
+                        vTable.Put(parsedData[w], 1);
                     }
                 }
                 // Write HTable to file
-                table.SaveTable(table.ID);
+                vTable.SaveTable(vTable.ID);
                 // Create a vertex for this site with the same ID as HTable
-                Vertex v = new Vertex(table.ID, table.URL);
-                // Calculate similarity to parent vertex htable
+                Vertex v = new Vertex(vTable.ID, vTable.URL);
+
+                // Create an edge connecting this vertex and parent vertex
+                double similarity = 0;
                 if (parent != null)
                 {
+                    // Calc similiarty to parent
                     HTable parentTable = LoadTable(parent.ID);
-                    List<object>[] vector = WebCompareModel.BuildVector(table, parentTable);
+                    List<object>[] vector = WebCompareModel.BuildVector(vTable, parentTable);
                     //// Calcualte similarity
-                    v.Similarity = WebCompareModel.CosineSimilarity(vector);
-                }
-                // Create an edge connecting this vertex and parent vertex
-                int parentID = 0;
-                if (parent != null) parentID = parent.ID;
-                Edge e = new Edge(parentID, v.ID, v.Similarity, ++EdgeNumber);
-                MainGraph.AddEdge(e);   // Add edge to Graph list
-                MainGraph.SaveEdge(e);  // Write edge to disk
-                                        // Add list of sites to this vertex
-                                        //// Forach- add, recursively call this method
-                foreach (var s in sites)
-                {
-                    // Don't add if site exists already
-                    int id = 0;
-                    if (MainGraph.HasVertex(s, out id))
-                    {
-                        v.Neighbors.Add(id);
-                    }
-                    else v.Neighbors.Add(BuildGraph(s, v).ID);
+                    similarity = WebCompareModel.CosineSimilarity(vector);
+                    //Create edge to parent
+                    Edge e = new Edge(parent.ID, v.ID, similarity, ++EdgeNumber);
+                    MainGraph.AddEdge(e);   // Add edge to Graph list
+                    MainGraph.SaveEdge(e);  // Write edge to disk
                 }
                 // Add Vertex to graph
+                MainGraph.AddVertex(v);
+
+                // Add list of sites to this vertex
+                //// Forach- add, recursively call this method
+                foreach (var s in sites)
+                {
+                    // Don't get more sites if site tree has been built already 
+                    Vertex v2 = MainGraph.HasVertex(s);
+                    if (v2 != null)
+                    {
+                        AddMessage("Old Vertex Found.");
+                        // Add eachother as neighbors
+                        v.Neighbors.Add(v2.ID);
+                        v2.Neighbors.Add(v.ID);
+                        // Update/Add to graph
+                        MainGraph.AddVertex(v);
+                        MainGraph.AddVertex(v2);
+                        // Calc similiarty to parent
+                        HTable v2Table = LoadTable(v2.ID);
+                        similarity = 0;   // clear
+                        if (v2Table != null)
+                        {
+                            List<object>[] vector = WebCompareModel.BuildVector(vTable, v2Table);
+                            //// Calcualte similarity
+                            similarity = WebCompareModel.CosineSimilarity(vector);
+                            //Create edge to parent
+                            Edge e = new Edge(v.ID, v2.ID, similarity, ++EdgeNumber);
+                            MainGraph.AddEdge(e);   // Add edge to Graph list
+                            MainGraph.SaveEdge(e);  // Write edge to disk
+                        }
+                        MainGraph.SaveVertex(v2);
+                    }
+                    else
+                    {
+                        v.Neighbors.Add(BuildGraph(s, v).ID);
+                    }
+                }
+                // Update Vertex to graph and persist
                 MainGraph.AddVertex(v);
                 MainGraph.SaveVertex(v);
                 return v;
@@ -322,8 +305,8 @@ namespace WebCompare3.ViewModel
                     if (att.Value.StartsWith(@"/wiki/"))
                         sites.Add("https://en.wikipedia.org" + att.Value);
 
-                    // Only take 10 sites
-                    if (sites.Count > 9) break;
+                    // Only take x number of sites
+                    if (sites.Count >= MAXSEEDS) break;
                 }
                 // Paragraphs
                 var nodes = doc.DocumentNode.SelectNodes("//p");

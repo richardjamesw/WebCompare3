@@ -58,8 +58,15 @@ namespace WebCompare3.Model
         /// <param name="newVertex"></param>
         public void AddVertex(Vertex newVertex)
         {
-            this.vertices.Add(newVertex);
+            if (Vertices != null)
+            {
+                // Remove old value
+                Vertices.RemoveAll(vert => vert.ID == newVertex.ID);
+            }
+            // Add new value
+            Vertices.Add(newVertex);
         }
+
 
         /// <summary>
         /// Add an edge to the graph's list of edges
@@ -75,27 +82,17 @@ namespace WebCompare3.Model
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
-        public bool HasVertex(string url, out int id)
+        public Vertex HasVertex(string url)
         {
-            bool rtn = false;
-            id = 0;
             if (Vertices == null)
             {
-                return rtn;
+                return null;
             }
             else
             {
-                IEnumerable<int> ident =
-                from vert in Vertices
-                where vert.Data == url
-                select vert.ID;
-                id = ident.FirstOrDefault();
+                return
+                    Vertices.FirstOrDefault(vert => vert.Data == url);
             }
-
-            if (id > 0)
-                return true;
-            else
-                return false;
         }
 
         /// <summary>
@@ -244,6 +241,9 @@ namespace WebCompare3.Model
             catch (Exception e) { Console.WriteLine("Error in ReadNode: " + e); }
             return readEdge;
         }
+
+
+        public 
         #endregion
 
     } // End Graph class
@@ -287,7 +287,6 @@ namespace WebCompare3.Model
                 neighbors = value;
             }
         }
-        public double Similarity { get; set; }
         #endregion
         public Vertex(int id, string data)
         {
@@ -350,6 +349,14 @@ namespace WebCompare3.Model
             this.node1 = node1; this.node2 = node2;
             this.weight = weight; this.id = id;
         }
+    }
+
+    public struct Root
+    {
+        public string Name { get; set; }
+        public Vertex RootVertex { get; set; }
+        public Root(string n, Vertex v)
+        { Name = n;  RootVertex = v; }
     }
 
 }
