@@ -22,11 +22,11 @@
         </Grid.ColumnDefinitions>
 
         <!-- Enter a URL area-->
-        <TextBlock Style="{DynamicResource BasicTextStyle}" Text="Enter a URL for comparison:" Margin="20, 0, 0, 0"/>
-        <WrapPanel Grid.Row="1">
-            <TextBox Name="txtURL" Text="{Binding UserURL}" Width="250" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20, 5, 5, 5" />
-
-            <Border IsEnabled="{Binding ElementName=btnGo}" BorderBrush="SlateGray" BorderThickness="3" CornerRadius="50" Height="40" Width="40" Margin="0"  >
+        <TextBlock Style="{DynamicResource BasicTextStyle}" Text="Select a site from below:" Margin="20, 0, 0, 0" VerticalAlignment="Center"/>
+        
+        <!-- Go button -->
+        <WrapPanel Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,20,0">
+            <Border IsEnabled="{Binding ElementName=btnGo}" BorderBrush="SlateGray" BorderThickness="3" CornerRadius="50" Height="40" Width="40" Margin="0">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="MediumSpringGreen"/>
@@ -41,7 +41,7 @@
                     </Style>
                 </Border.Style>
                 <Button Name="btnGo" Command="{Binding GoCommand}" Style="{DynamicResource ButtonTransparent}">
-                    <Image Source="/WebCompare2.0;component/View/start.png" Stretch="None" Margin="-2,0,1,0"/>
+                    <Image Source="/WebCompare3;component/View/start.png" Stretch="None" Margin="-2,0,1,0"/>
                 </Button>
             </Border>
         </WrapPanel>
@@ -50,11 +50,15 @@
         <!-- List of Websites -->
         <ListBox x:Name="lstWebsites" Visibility="Collapsed" ItemsSource="{Binding ListWebsites}" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="300" Margin="10" />
 
-        <!-- Website Data Received -->
-        <TextBox x:Name="txtDataRcv" Text="{Binding Results, Mode=OneWay}" IsReadOnly="True" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="10" Width="350" TextWrapping="Wrap" />
+        <!-- Status label -->
+        <TextBlock Style="{DynamicResource BasicTextStyle}" Grid.Column="1" Text="Status:" Margin="20, 0, 0, 0" VerticalAlignment="Center"/>
 
-        <!-- Status box -->
-        <TextBox Name="tbStatus" TextChanged="TextBox_TextChanged" Text="{Binding Status, Mode=OneWay}" IsReadOnly="True" Grid.Column="1"  Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="10" Width="350" TextWrapping="Wrap" />
+        <!-- Website Data Received -->
+      <ComboBox Name="cmbGraphSites" ItemsSource="{Binding GraphSites}" SelectedItem="{Binding GraphSitesSelected}" Grid.Column="0" Grid.Row="2" 
+                HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="10" Width="350" />
+
+      <!-- Status box -->
+        <TextBox Name="tbStatus" TextChanged="tbStatus_TextChanged" Text="{Binding Status, Mode=OneWay}" IsReadOnly="True" Grid.Column="1"  Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="10" Width="350" TextWrapping="Wrap" />
 
 
 

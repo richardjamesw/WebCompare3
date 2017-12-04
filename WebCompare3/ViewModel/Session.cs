@@ -14,6 +14,8 @@ using HtmlAgilityPack;
 using System.Windows.Threading;
 using Prism.Commands;
 using System.Runtime.Serialization.Formatters.Binary;
+using WebCompare3.View;
+using System.Windows.Controls;
 
 namespace WebCompare3.ViewModel
 {
@@ -49,11 +51,14 @@ namespace WebCompare3.ViewModel
             worker.RunWorkerCompleted += worker_RunWorkerCompleted;
 
             // Populate list of selectable sites
+            WebCompareViewModel.Instance.GraphSites =
+               from vert in LoaderViewModel.Instance.MainGraph.Vertices
+               select vert.Data;
         }
         #endregion
 
         #region Session
-       
+
         /// <summary>
         /// Start method
         /// </summary>
@@ -66,15 +71,28 @@ namespace WebCompare3.ViewModel
 
         public bool CanStart()
         {
-            return !Instance.worker.IsBusy;
+            if (!Instance.worker.IsBusy)
+            {
+                // Disable button
+                return false;
+            }
+            else
+            {
+                // Enable button
+                return true;
+            }
         }
 
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             // Get selected site
+            string selected = WebCompareViewModel.Instance.GraphSitesSelected;
             // Use dijkstras to find shortest path
+            Vertex selectedVert = LoaderViewModel.Instance.MainGraph.GetVertexWithData(selected);
+            List<int> path = LoaderViewModel.Instance.DijkstraShortestPath(selectedVert);
             // Graphically display the path
-            
+            PathDisplay pd = new PathDisplay(path);
+
         }
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

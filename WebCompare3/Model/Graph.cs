@@ -255,8 +255,13 @@ namespace WebCompare3.Model
 
         public Edge GetEdge(int n1, int n2)
         {
-            var e = Edges.FirstOrDefault(x => x.Node1 == n1 && x.Node2 == n2);
-            return e;
+            return Edges.FirstOrDefault(x => x.Node1 == n1 && x.Node2 == n2);
+        }
+
+        public Vertex GetVertexWithData(string d)
+        {
+            return Vertices.FirstOrDefault(x => x.Data == d);
+
         }
         #endregion
 

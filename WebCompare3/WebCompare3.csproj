@@ -73,6 +73,9 @@
     <Compile Include="ViewModel\WebCompareViewModel.cs" />
     <Compile Include="View\Loader.xaml.cs" />
     <Compile Include="View\MainWindow.xaml.cs" />
+    <Compile Include="View\PathDisplay.xaml.cs">
+      <DependentUpon>PathDisplay.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\Window1.xaml.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
@@ -85,6 +88,10 @@
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\PathDisplay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\Resources.xaml">
       <Generator>MSBuild:Compile</Generator>

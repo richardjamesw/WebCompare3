@@ -7,6 +7,7 @@ using System.ComponentModel;    //for iNotifyPropertyChanged
 using System.Windows.Input; // ICommand
 using WebCompare3.Model;
 using Prism.Commands;
+using System.Collections.ObjectModel;
 
 namespace WebCompare3.ViewModel
 {
@@ -76,26 +77,45 @@ namespace WebCompare3.ViewModel
             }
         }
 
-        private string results = "Results will appear here in descending order of similarity.";
-        public string Results
+        private IEnumerable<string> graphSites = null;
+        public IEnumerable<string> GraphSites
         {
             get
             {
-                return results;
+                return graphSites;
             }
 
             set
             {
-                if (results != value)
+                if (graphSites != value)
                 {
-                    results = value;
-                    NotifyPropertyChanged("Results");
+                    graphSites = value;
+                    NotifyPropertyChanged("GraphSites");
                 }
 
             }
         }
 
-        private string status = "Enter a URL and press start above.";
+      private string graphSitesSelected = "";
+      public string GraphSitesSelected
+      {
+         get
+         {
+            return graphSitesSelected;
+         }
+
+         set
+         {
+            if (graphSitesSelected != value)
+            {
+               graphSitesSelected = value;
+               NotifyPropertyChanged("GraphSitesSelected");
+            }
+
+         }
+      }
+
+      private string status = "Enter a URL and press start above.";
         public string Status
         {
             get
