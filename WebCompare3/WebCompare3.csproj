@@ -64,7 +64,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\BTree.cs" />
+    <Compile Include="Model\Graph.cs" />
     <Compile Include="Model\HTable.cs" />
+    <Compile Include="Model\PriorityQueue.cs" />
     <Compile Include="Model\WebCompareModel.cs" />
     <Compile Include="ViewModel\LoaderViewModel.cs" />
     <Compile Include="ViewModel\Session.cs" />
@@ -123,6 +125,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="View\start.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ViewModel\testoutput.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
