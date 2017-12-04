@@ -120,10 +120,16 @@ namespace WebCompare3.Model
                         {
                             if (n < Vertex.NumberOfNeighbors)
                             {
-                                writer.Write(v.Neighbors[n]);
+                                writer.Write(v.Neighbors[n].Node1);
+                                writer.Write(v.Neighbors[n].Node2);
+                                writer.Write(v.Neighbors[n].Weight);
+                                writer.Write(v.Neighbors[n].ID);
                             }
                             else
                             {
+                                writer.Write(default(int));
+                                writer.Write(default(int));
+                                writer.Write(default(float));
                                 writer.Write(default(int));
                             }
                         }
@@ -204,7 +210,11 @@ namespace WebCompare3.Model
                         {
                             if (n != 0)
                             {
-                                readVertex.Neighbors.Add(reader.ReadInt32());
+                                int n1 = reader.ReadInt32();
+                                int n2 = reader.ReadInt32();
+                                float w = reader.ReadInt64();
+                                int nid = reader.ReadInt32();
+                                readVertex.Neighbors.Add(new Edge(n1, n2, w, nid));
                             }
                         }
                     } // end using
@@ -233,7 +243,7 @@ namespace WebCompare3.Model
                         fs.Seek(id * EdgeByteLength, SeekOrigin.Begin);
                         int n1 = reader.ReadInt32();
                         int n2 = reader.ReadInt32();
-                        int w = reader.ReadInt32();
+                        float w = reader.ReadInt64();
                         readEdge = new Edge(n1, n2, w, id);
                     } // end using
                 } // end if
@@ -243,7 +253,11 @@ namespace WebCompare3.Model
         }
 
 
-        public 
+        public Edge GetEdge(int n1, int n2)
+        {
+            var e = Edges.FirstOrDefault(x => x.Node1 == n1 && x.Node2 == n2);
+            return e;
+        }
         #endregion
 
     } // End Graph class
@@ -255,8 +269,21 @@ namespace WebCompare3.Model
     {
         private int id;
         private string data;
-        private List<int> neighbors;
+        private List<Edge> neighbors;
         public const int NumberOfNeighbors = 20;
+        public Vertex(int id, string data)
+        {
+            this.id = id;
+            this.data = data;
+            this.Cost = float.MaxValue;
+        }
+        public Vertex(int id)
+        {
+            this.id = id;
+            data = "";
+            neighbors = null;
+            this.Cost = float.MaxValue;
+        }
         #region Vertex Properties
         public int ID
         {
@@ -276,7 +303,7 @@ namespace WebCompare3.Model
                 data = value;
             }
         }
-        public List<int> Neighbors
+        public List<Edge> Neighbors
         {
             get
             {
@@ -287,19 +314,11 @@ namespace WebCompare3.Model
                 neighbors = value;
             }
         }
+        // Properties for Priority Queue
+        public float Cost { get; set; }
+        public int Index { get; set; }
         #endregion
-        public Vertex(int id, string data)
-        {
-            this.id = id;
-            this.data = data;
-        }
-        public Vertex(int id)
-        {
-            this.id = id;
-            data = "";
-            neighbors = null;
-        }
-    }
+    } // End Vertex
 
     /// <summary>
     /// Edges of the graph connecting vertices
@@ -308,7 +327,7 @@ namespace WebCompare3.Model
     {
         private int node1;
         private int node2;
-        private double weight;
+        private float weight;
         private int id;
         #region Edge Properties
         public int Node1
@@ -325,7 +344,7 @@ namespace WebCompare3.Model
                 return node2;
             }
         }
-        public double Weight
+        public float Weight
         {
             get
             {
@@ -344,7 +363,7 @@ namespace WebCompare3.Model
             }
         }
         #endregion
-        public Edge(int node1, int node2, double weight, int id)
+        public Edge(int node1, int node2, float weight, int id)
         {
             this.node1 = node1; this.node2 = node2;
             this.weight = weight; this.id = id;

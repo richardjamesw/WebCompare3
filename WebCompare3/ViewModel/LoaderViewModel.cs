@@ -17,7 +17,7 @@ namespace WebCompare3.ViewModel
     {
 
         #region Instance Variables
-        Graph MainGraph = new Graph();
+        private Graph mainGraph = new Graph();
         List<Root> roots = new List<Root>();
         // Stick with ~500 sites per root
         const int MAXSITES = 200;   // Max sites per root
@@ -69,6 +69,8 @@ namespace WebCompare3.ViewModel
         #endregion
 
         #region Properties
+        // Getter for the main graph, readonly
+        public Graph MainGraph { get { return mainGraph; } }
 
         private string loadStatus = "Status...................";
         public string LoadStatus
@@ -189,6 +191,27 @@ namespace WebCompare3.ViewModel
             LoadStatus += "\n" + s;
         }
 
+
+        /// <summary>
+        /// Determine if Vertex is a Cluster Center
+        /// </summary>
+        /// <param name="vert"></param>
+        /// <returns></returns>
+        public bool IsRoot(Vertex vert)
+        {
+            if (roots == null || roots.Count < 1)
+                return false;
+
+            foreach(Root r in roots)
+            {
+                if (vert.ID == r.RootVertex.ID)
+                    return true;
+                else
+                    return false;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Main method to recursively get websites and build graph
         /// </summary>
@@ -196,6 +219,11 @@ namespace WebCompare3.ViewModel
         /// <param name="parent"></param>
         /// <returns></returns>
         public Vertex BuildGraph(string site, Vertex parent)
+        {
+            float sim = 0;
+            return BuildGraph(site, parent, out sim);
+        }
+        public Vertex BuildGraph(string site, Vertex parent, out float sim)
         {
             try
             {
@@ -222,63 +250,70 @@ namespace WebCompare3.ViewModel
                 Vertex v = new Vertex(vTable.ID, vTable.URL);
 
                 // Create an edge connecting this vertex and parent vertex
-                double similarity = 0;
+                sim = 0;
                 if (parent != null)
                 {
                     // Calc similiarty to parent
                     HTable parentTable = LoadTable(parent.ID);
                     List<object>[] vector = WebCompareModel.BuildVector(vTable, parentTable);
                     //// Calcualte similarity
-                    similarity = WebCompareModel.CosineSimilarity(vector);
+                    sim = (float)WebCompareModel.CosineSimilarity(vector);
                     //Create edge to parent
-                    Edge e = new Edge(parent.ID, v.ID, similarity, ++EdgeNumber);
-                    MainGraph.AddEdge(e);   // Add edge to Graph list
-                    MainGraph.SaveEdge(e);  // Write edge to disk
+                    Edge e = new Edge(parent.ID, v.ID, sim, ++EdgeNumber);
+                    mainGraph.AddEdge(e);   // Add edge to Graph list
+                    mainGraph.SaveEdge(e);  // Write edge to disk
                 }
                 // Add Vertex to graph
-                MainGraph.AddVertex(v);
+                mainGraph.AddVertex(v);
 
                 // Add list of sites to this vertex
                 //// Forach- add, recursively call this method
                 foreach (var s in sites)
                 {
                     // Don't get more sites if site tree has been built already 
-                    Vertex v2 = MainGraph.HasVertex(s);
+                    Vertex v2 = mainGraph.HasVertex(s);
                     if (v2 != null)
                     {
                         AddMessage("Old Vertex Found.");
-                        // Add eachother as neighbors
-                        v.Neighbors.Add(v2.ID);
-                        v2.Neighbors.Add(v.ID);
-                        // Update/Add to graph
-                        MainGraph.AddVertex(v);
-                        MainGraph.AddVertex(v2);
                         // Calc similiarty to parent
                         HTable v2Table = LoadTable(v2.ID);
-                        similarity = 0;   // clear
+                        sim = 0;   // clear
                         if (v2Table != null)
                         {
                             List<object>[] vector = WebCompareModel.BuildVector(vTable, v2Table);
                             //// Calcualte similarity
-                            similarity = WebCompareModel.CosineSimilarity(vector);
+                            sim = (float)WebCompareModel.CosineSimilarity(vector);
                             //Create edge to parent
-                            Edge e = new Edge(v.ID, v2.ID, similarity, ++EdgeNumber);
-                            MainGraph.AddEdge(e);   // Add edge to Graph list
-                            MainGraph.SaveEdge(e);  // Write edge to disk
+                            Edge e = new Edge(v.ID, v2.ID, (float)sim, ++EdgeNumber);
+                            mainGraph.AddEdge(e);   // Add edge to Graph list
+                            mainGraph.SaveEdge(e);  // Write edge to disk
+                            
+                            // Add eachother as neighbors
+                            v.Neighbors.Add(e);
+                            v2.Neighbors.Add(new Edge(v2.ID, v.ID, (float)sim, ++EdgeNumber));
+                            // Update/Add to graph
+                            mainGraph.AddVertex(v);
+                            mainGraph.AddVertex(v2);
                         }
-                        MainGraph.SaveVertex(v2);
+
+                        mainGraph.SaveVertex(v2);
                     }
                     else
                     {
-                        v.Neighbors.Add(BuildGraph(s, v).ID);
+                        float simout = 0;
+                        var neighb = BuildGraph(s, v, out simout);
+                        Edge newEdge = new Edge(v.ID, neighb.ID, simout, EdgeNumber++);
+                        v.Neighbors.Add(newEdge);
+                        mainGraph.SaveEdge(newEdge);
                     }
                 }
                 // Update Vertex to graph and persist
-                MainGraph.AddVertex(v);
-                MainGraph.SaveVertex(v);
+                mainGraph.AddVertex(v);
+                mainGraph.SaveVertex(v);
                 return v;
             }
             catch(Exception exc) { Console.WriteLine("Error building graph: " + exc); }
+            sim = 0;
             return null;
         }
 
@@ -360,22 +395,76 @@ namespace WebCompare3.ViewModel
             return loadedTable;
         }
 
-
         /// <summary>
-        /// Read number of keys
+        /// Use Dijkstras to find any root
         /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
         /// <returns></returns>
-        public static int GetNumberOfKeys()
+        public List<int> DijkstraShortestPath(Vertex src)
         {
-            string DirName = $"tablebin\\";
+            List<int> output = null;
             try
             {
-                if (!Directory.Exists(DirName)) return 0;
-                int count = Directory.GetFiles(DirName).Length;
-                return count;
+                // Check if valid src
+                if (!mainGraph.Vertices.Contains(src)) return null;
+                // output var
+                output = new List<int>();
+
+                // Add all nodes to PQ (Cost MaxValue at this point)
+                PriorityQueue Q = new PriorityQueue(mainGraph.Vertices);
+                // Set source Cost to 0
+                int src_index = Q.IndexOf(src);
+                Q[src_index].Cost = 0;
+                // Move to top
+                Q.Exchange(0, src_index);
+
+                // While PQ is not a cluster center
+                Vertex polld, next;
+                int temp_index;
+                while (!Q.IsEmpty())
+                {
+                    //// Poll (remove root slot)
+                    polld = Q.Poll();
+                    // Add to output unless we are at a disconnected vertex
+                    if (polld.Cost != float.MaxValue)
+                        output.Add(polld.ID);
+                    else
+                        return output;
+
+                    // If we have found a cluster center return Path
+                    if (IsRoot(polld)) return output;
+
+                    // For each surrounding edge
+                    for (int i = 0; i < polld.Neighbors.Count; ++i)
+                    {
+                        // Get next vertex & its index in Q
+                        next = Q.GetVertex(polld.Neighbors[i].Node2);
+                        temp_index = Q.IndexOf(next);
+
+                        // Skip src
+                        if (next.Cost == 0) continue;
+
+                        // If cost from src to (p + (cost from p to e)) < next.Cost
+                        float alternateDist = polld.Cost + polld.Neighbors[i].Weight;
+                        if (alternateDist < next.Cost)
+                        {
+                            next.Cost = alternateDist;
+                            // Reweight
+                            Q.Reweight(next);
+                        }
+
+                    }
+                }
+            } // End try
+            catch (Exception e)
+            { Console.WriteLine("Error in Dijkstra's: " + e);
             }
-            catch { return 0; }
-        }
+
+            return output;
+
+
+        } // End Dijkstras
         #endregion
 
 
