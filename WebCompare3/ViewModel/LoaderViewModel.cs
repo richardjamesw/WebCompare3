@@ -18,7 +18,8 @@ namespace WebCompare3.ViewModel
 
         #region Instance Variables
         private Graph mainGraph = new Graph();
-        List<Root> roots = new List<Root>();
+        private List<Root> roots = new List<Root>();
+        private MainWindow mw = null;
         // Stick with ~500 sites per root
         const int MAXSITES = 200;   // Max sites per root
         const int MAXSEEDS = 10;   // Max number of sites from each site
@@ -71,6 +72,8 @@ namespace WebCompare3.ViewModel
         #region Properties
         // Getter for the main graph, readonly
         public Graph MainGraph { get { return mainGraph; } }
+
+        public List<Root> Roots { get { return roots; } }
 
         private string loadStatus = "Status...................";
         public string LoadStatus
@@ -128,7 +131,7 @@ namespace WebCompare3.ViewModel
         public DelegateCommand StartCommand { get; private set; }
         private void OnStart()
         {
-            MainWindow mw = new MainWindow();
+            mw = new MainWindow();
             mw.DataContext = WebCompareViewModel.Instance;
             mw.Show();
             StartCommand.RaiseCanExecuteChanged();
@@ -138,6 +141,13 @@ namespace WebCompare3.ViewModel
             return !UpdateIsChecked;
         }
 
+        public void CloseMW()
+        {
+            if (mw != null)
+            {
+                mw.Close();
+            }
+        }
         #endregion
 
         #region Workers
@@ -395,76 +405,6 @@ namespace WebCompare3.ViewModel
             return loadedTable;
         }
 
-        /// <summary>
-        /// Use Dijkstras to find any root
-        /// </summary>
-        /// <param name="src"></param>
-        /// <param name="dst"></param>
-        /// <returns></returns>
-        public List<int> DijkstraShortestPath(Vertex src)
-        {
-            List<int> output = null;
-            try
-            {
-                // Check if valid src
-                if (!mainGraph.Vertices.Contains(src)) return null;
-                // output var
-                output = new List<int>();
-
-                // Add all nodes to PQ (Cost MaxValue at this point)
-                PriorityQueue Q = new PriorityQueue(mainGraph.Vertices);
-                // Set source Cost to 0
-                int src_index = Q.IndexOf(src);
-                Q[src_index].Cost = 0;
-                // Move to top
-                Q.Exchange(0, src_index);
-
-                // While PQ is not a cluster center
-                Vertex polld, next;
-                int temp_index;
-                while (!Q.IsEmpty())
-                {
-                    //// Poll (remove root slot)
-                    polld = Q.Poll();
-                    // Add to output unless we are at a disconnected vertex
-                    if (polld.Cost != float.MaxValue)
-                        output.Add(polld.ID);
-                    else
-                        return output;
-
-                    // If we have found a cluster center return Path
-                    if (IsRoot(polld)) return output;
-
-                    // For each surrounding edge
-                    for (int i = 0; i < polld.Neighbors.Count; ++i)
-                    {
-                        // Get next vertex & its index in Q
-                        next = Q.GetVertex(polld.Neighbors[i].Node2);
-                        temp_index = Q.IndexOf(next);
-
-                        // Skip src
-                        if (next.Cost == 0) continue;
-
-                        // If cost from src to (p + (cost from p to e)) < next.Cost
-                        float alternateDist = polld.Cost + polld.Neighbors[i].Weight;
-                        if (alternateDist < next.Cost)
-                        {
-                            next.Cost = alternateDist;
-                            // Reweight
-                            Q.Reweight(next);
-                        }
-
-                    }
-                }
-            } // End try
-            catch (Exception e)
-            { Console.WriteLine("Error in Dijkstra's: " + e);
-            }
-
-            return output;
-
-
-        } // End Dijkstras
         #endregion
 
 

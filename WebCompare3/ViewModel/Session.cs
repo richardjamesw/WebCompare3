@@ -51,9 +51,25 @@ namespace WebCompare3.ViewModel
             worker.RunWorkerCompleted += worker_RunWorkerCompleted;
 
             // Populate list of selectable sites
-            WebCompareViewModel.Instance.GraphSites =
-               from vert in LoaderViewModel.Instance.MainGraph.Vertices
-               select vert.Data;
+            if (LoaderViewModel.Instance.MainGraph != null)
+            {
+                WebCompareViewModel.Instance.GraphSites =
+                    from vert in LoaderViewModel.Instance.MainGraph.Vertices
+                    select vert.Data;
+            }
+            else
+            {
+                if (LoaderViewModel.Instance.MainGraph.LoadAllVertices())
+                {
+                    WebCompareViewModel.Instance.GraphSites =
+                        from vert in LoaderViewModel.Instance.MainGraph.Vertices
+                        select vert.Data;
+                }
+                else
+                {
+                    LoaderViewModel.Instance.CloseMW();
+                }
+            }
         }
         #endregion
 
@@ -87,12 +103,19 @@ namespace WebCompare3.ViewModel
         {
             // Get selected site
             string selected = WebCompareViewModel.Instance.GraphSitesSelected;
-            // Use dijkstras to find shortest path
             Vertex selectedVert = LoaderViewModel.Instance.MainGraph.GetVertexWithData(selected);
-            List<int> path = LoaderViewModel.Instance.DijkstraShortestPath(selectedVert);
-            // Graphically display the path
-            PathDisplay pd = new PathDisplay(path);
+            // Use dijkstras to find shortest path
+            List<int>[] paths = new List<int>[5];
+            for (int r = 0; r < 5; ++r)
+            {
+                paths[r] = new List<int>();
+                paths[r] = DijkstraShortestPath(selectedVert, LoaderViewModel.Instance.Roots[r].RootVertex);
+            }
 
+            // Graphically display the path
+            PathDisplay pd = new PathDisplay();
+            pd.SrcText = selectedVert.ID.ToString();
+            pd.ShowPaths(paths);
         }
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -114,6 +137,80 @@ namespace WebCompare3.ViewModel
             if (s.Equals("")) wcViewModel.Status = "";
             else wcViewModel.Status += s;
         }
+
+
+
+        /// <summary>
+        /// Use Dijkstras to find any root
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dst"></param>
+        /// <returns></returns>
+        public List<int> DijkstraShortestPath(Vertex src, Vertex dst)
+        {
+            List<int> output = null;
+            try
+            {
+                // Check if valid src
+                if (!LoaderViewModel.Instance.MainGraph.Vertices.Contains(src)) return null;
+                // The output variable
+                output = new List<int>();
+
+                // Add all nodes to PQ (Cost MaxValue at this point)
+                PriorityQueue Q = new PriorityQueue(LoaderViewModel.Instance.MainGraph.Vertices);
+                // Set source Cost to 0
+                int src_index = Q.IndexOf(src);
+                Q[src_index].Cost = 0;
+                // Move to top
+                Q.Exchange(0, src_index);
+
+                // While PQ is not empty
+                Vertex polld, next;
+                int temp_index;
+                while (!Q.IsEmpty())
+                {
+                    //// Poll (remove root slot)
+                    polld = Q.Poll();
+                    // Add to output unless we are at a disconnected vertex
+                    if (polld.Cost != float.MaxValue)
+                        output.Add(polld.ID);
+                    else
+                        return output;
+
+                    // If we have found a cluster center return Path
+                    if (polld == dst) return output;
+
+                    // For each surrounding edge
+                    for (int i = 0; i < polld.Neighbors.Count; ++i)
+                    {
+                        // Get next vertex & its index in Q
+                        next = Q.GetVertex(polld.Neighbors[i].Node2);
+                        temp_index = Q.IndexOf(next);
+
+                        // Skip src
+                        if (next.Cost == 0) continue;
+
+                        // If cost from src to (p + (cost from p to e)) < next.Cost
+                        float alternateDist = polld.Cost + polld.Neighbors[i].Weight;
+                        if (alternateDist < next.Cost)
+                        {
+                            next.Cost = alternateDist;
+                            // Reweight
+                            Q.Reweight(next);
+                        }
+
+                    }
+                }
+            } // End try
+            catch (Exception e)
+            {
+                Console.WriteLine("Error in Dijkstra's: " + e);
+            }
+
+            return output;
+
+
+        } // End Dijkstras
 
         #endregion
 

@@ -6,7 +6,12 @@
         xmlns:local="clr-namespace:WebCompare3.View"
         mc:Ignorable="d"
         Title="PathDisplay" Height="500" Width="500">
-    <Grid>
-        <Canvas Name="PathCanvas" />
-    </Grid>
+
+
+    <Canvas Name="PathCanvas">
+        <!-- Source node selected by the user -->
+        <TextBlock Text="{Binding SrcText}" Height="20" Width="20" Canvas.Top="{Binding CenterY}" Canvas.Left="{Binding CenterX}" Panel.ZIndex="1" TextAlignment="Center"/>
+        <Ellipse Height="20" Width="20" Canvas.Top="{Binding CenterY}" Canvas.Left="{Binding CenterX}" Fill="Red" Panel.ZIndex="0"/>
+    </Canvas>
+
 </Window>

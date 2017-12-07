@@ -4,28 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace WebCompare3.Model
 {
     class Graph
     {
-        private static int numOfVertices = 0;
-        private List<Vertex> vertices;
-        private List<Edge> edges;
+        private List<Vertex> vertices = new List<Vertex>();
+        private List<Edge> edges = new List<Edge>();
         const int VertexByteLength = 256;
         const int EdgeByteLength = 16;
         #region Graph Properties
-        public static int NumberOfVertices
-        {
-            get
-            {
-                return numOfVertices;
-            }
-            set
-            {
-                numOfVertices = value;
-            }
-        }
+
         public List<Vertex> Vertices
         {
             get
@@ -63,7 +53,7 @@ namespace WebCompare3.Model
                 // Remove old value
                 Vertices.RemoveAll(vert => vert.ID == newVertex.ID);
             }
-            // Add new value
+            // Add new (updated) value
             Vertices.Add(newVertex);
         }
 
@@ -99,7 +89,7 @@ namespace WebCompare3.Model
         /// Locker for writing and saving vertices and edges
         /// </summary>
         private static object lockObj = new object();
-        
+
         /// <summary>
         /// Save vertex to file
         /// </summary>
@@ -192,10 +182,11 @@ namespace WebCompare3.Model
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Vertex LoadVertex(int id)
+        public bool LoadAllVertices()
         {
+            bool success = false;
             string FileName = $"graphbin\\vertices.bin";
-            Vertex readVertex = null;
+            Vertex readVertex;
             try
             {
                 if (new FileInfo(FileName).Length > 0)
@@ -203,25 +194,38 @@ namespace WebCompare3.Model
                     using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read))
                     using (BinaryReader reader = new BinaryReader(fs))
                     {
-                        readVertex = new Vertex(id);
-                        fs.Seek(id * VertexByteLength, SeekOrigin.Begin);
-                        readVertex.Data = reader.ReadString();
-                        for (int n = 0; n < Vertex.NumberOfNeighbors; ++n)
+                        long len = fs.Length;
+                        for (int id = 0; id < len / VertexByteLength; id += VertexByteLength)
                         {
-                            if (n != 0)
+                            readVertex = null; // Clear vertex
+                            readVertex = new Vertex(id / VertexByteLength);
+                            fs.Seek(id, SeekOrigin.Begin);
+                            // Get Vertex data from file
+                            readVertex.Data = reader.ReadString();
+                            for (int n = 0; n < Vertex.NumberOfNeighbors; ++n)
                             {
-                                int n1 = reader.ReadInt32();
-                                int n2 = reader.ReadInt32();
-                                float w = reader.ReadInt64();
-                                int nid = reader.ReadInt32();
-                                readVertex.Neighbors.Add(new Edge(n1, n2, w, nid));
+                                if (n != 0)
+                                {
+                                    int n1 = reader.ReadInt32();
+                                    int n2 = reader.ReadInt32();
+                                    float w = reader.ReadInt64();
+                                    int nid = reader.ReadInt32();
+                                    readVertex.Neighbors.Add(new Edge(n1, n2, w, nid));
+                                }
                             }
-                        }
-                    } // end using
-                } // end if
+                            // Add vertex to this graph
+                            this.AddVertex(readVertex);
+                        } // End for loop
+                        success = true;
+                    } // End reader using
+                } // End if
             }
-            catch (Exception e) { Console.WriteLine("Error in ReadNode: " + e); }
-            return readVertex;
+            catch (Exception e)
+            {
+                MessageBox.Show("Error trying to load vertices from disk, please reload Graph. \nError: " + e, "Model:Graph:LoadAllVertices()", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return success;
         }
 
         /// <summary>
@@ -229,10 +233,11 @@ namespace WebCompare3.Model
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Edge LoadEdge(int id)
+        public bool LoadAllEdges()
         {
+            bool success = false;
             string FileName = $"graphbin\\edges.bin";
-            Edge readEdge = null;
+            Edge readEdge;
             try
             {
                 if (new FileInfo(FileName).Length > 0)
@@ -240,18 +245,28 @@ namespace WebCompare3.Model
                     using (FileStream fs = new FileStream(FileName, FileMode.Open, FileAccess.Read))
                     using (BinaryReader reader = new BinaryReader(fs))
                     {
-                        fs.Seek(id * EdgeByteLength, SeekOrigin.Begin);
-                        int n1 = reader.ReadInt32();
-                        int n2 = reader.ReadInt32();
-                        float w = reader.ReadInt64();
-                        readEdge = new Edge(n1, n2, w, id);
+                        long len = fs.Length;
+                        for (int id = 0; id < len / EdgeByteLength; id += EdgeByteLength)
+                        {
+                            readEdge = null; // Clear edge
+                            fs.Seek(id, SeekOrigin.Begin);
+                            int n1 = reader.ReadInt32();
+                            int n2 = reader.ReadInt32();
+                            float w = reader.ReadInt64();
+                            readEdge = new Edge(n1, n2, w, id / EdgeByteLength);
+                            this.AddEdge(readEdge);
+                        } // End for loop
+                        success = true;
                     } // end using
                 } // end if
             }
-            catch (Exception e) { Console.WriteLine("Error in ReadNode: " + e); }
-            return readEdge;
+            catch (Exception e)
+            {
+                MessageBox.Show("Error trying to load edges from disk, please reload Graph. \nError: " + e, "Model:Graph:LoadAllEdges()", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return success;
         }
-
 
         public Edge GetEdge(int n1, int n2)
         {
@@ -380,7 +395,7 @@ namespace WebCompare3.Model
         public string Name { get; set; }
         public Vertex RootVertex { get; set; }
         public Root(string n, Vertex v)
-        { Name = n;  RootVertex = v; }
+        { Name = n; RootVertex = v; }
     }
 
 }
