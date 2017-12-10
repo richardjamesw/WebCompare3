@@ -68,15 +68,6 @@ namespace WebCompare3.ViewModel
             }
         }
 
-
-        public string[] ListWebsites
-        {
-            get
-            {
-                return WebCompareModel.Websites;
-            }
-        }
-
         private IEnumerable<string> graphSites = null;
         public IEnumerable<string> GraphSites
         {

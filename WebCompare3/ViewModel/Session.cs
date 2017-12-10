@@ -49,27 +49,6 @@ namespace WebCompare3.ViewModel
             // Register background workers
             worker.DoWork += worker_DoWork;
             worker.RunWorkerCompleted += worker_RunWorkerCompleted;
-
-            // Populate list of selectable sites
-            if (LoaderViewModel.Instance.MainGraph != null)
-            {
-                WebCompareViewModel.Instance.GraphSites =
-                    from vert in LoaderViewModel.Instance.MainGraph.Vertices
-                    select vert.Data;
-            }
-            else
-            {
-                if (LoaderViewModel.Instance.MainGraph.LoadAllVertices())
-                {
-                    WebCompareViewModel.Instance.GraphSites =
-                        from vert in LoaderViewModel.Instance.MainGraph.Vertices
-                        select vert.Data;
-                }
-                else
-                {
-                    LoaderViewModel.Instance.CloseMW();
-                }
-            }
         }
         #endregion
 
@@ -87,7 +66,7 @@ namespace WebCompare3.ViewModel
 
         public bool CanStart()
         {
-            if (!Instance.worker.IsBusy)
+            if (Instance.worker.IsBusy)
             {
                 // Disable button
                 return false;
@@ -109,6 +88,7 @@ namespace WebCompare3.ViewModel
             for (int r = 0; r < 5; ++r)
             {
                 paths[r] = new List<int>();
+                AddMessage("Searching for path to: " + LoaderViewModel.Instance.Roots[r].Name);
                 paths[r] = DijkstraShortestPath(selectedVert, LoaderViewModel.Instance.Roots[r].RootVertex);
             }
 

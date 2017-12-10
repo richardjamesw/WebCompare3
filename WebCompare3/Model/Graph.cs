@@ -12,7 +12,7 @@ namespace WebCompare3.Model
     {
         private List<Vertex> vertices = new List<Vertex>();
         private List<Edge> edges = new List<Edge>();
-        const int VertexByteLength = 256;
+        const int VertexByteLength = 512;
         const int EdgeByteLength = 16;
         #region Graph Properties
 
@@ -48,7 +48,9 @@ namespace WebCompare3.Model
         /// <param name="newVertex"></param>
         public void AddVertex(Vertex newVertex)
         {
-            if (Vertices != null)
+            if (Vertices == null) return;
+
+            if (Vertices.Contains(newVertex))
             {
                 // Remove old value
                 Vertices.RemoveAll(vert => vert.ID == newVertex.ID);
@@ -96,7 +98,9 @@ namespace WebCompare3.Model
         /// <param name="v">vertex to write to file</param>
         public void SaveVertex(Vertex v)
         {
-            string FileName = $"graphbin\\vertices.bin";
+            string FileDir = @"graphbin\";
+            string FileName = FileDir + "vertices.bin";
+            Directory.CreateDirectory(FileDir);
             lock (lockObj)
             {
                 try
@@ -106,9 +110,9 @@ namespace WebCompare3.Model
                     using (BinaryWriter writer = new BinaryWriter(ms))
                     {
                         writer.Write(v.Data);
-                        for (int n = 0; n < v.Neighbors.Count; ++n)
+                        for (int n = 0; n < Vertex.NumberOfNeighbors; ++n)
                         {
-                            if (n < Vertex.NumberOfNeighbors)
+                            if (n < v.Neighbors.Count)
                             {
                                 writer.Write(v.Neighbors[n].Node1);
                                 writer.Write(v.Neighbors[n].Node2);
@@ -135,9 +139,9 @@ namespace WebCompare3.Model
                     }
                 }
                 catch (IndexOutOfRangeException e)
-                { Console.WriteLine("Index out of range in WriteNode: " + e); }
+                { Console.WriteLine("Index out of range in SaveVertex: " + e); }
                 catch (Exception e)
-                { Console.WriteLine("Error in WriteNode: " + e); }
+                { Console.WriteLine("Error in SaveVertex: " + e); }
             }
         }
 
@@ -147,7 +151,9 @@ namespace WebCompare3.Model
         /// <param name="edge"></param>
         public void SaveEdge(Edge edge)
         {
-            string FileName = $"graphbin\\edges.bin";
+            string FileDir = @"graphbin\";
+            string FileName = FileDir + "edges.bin";
+            Directory.CreateDirectory(FileDir);
             lock (lockObj)
             {
                 try
@@ -170,9 +176,9 @@ namespace WebCompare3.Model
                     }
                 }
                 catch (IndexOutOfRangeException e)
-                { Console.WriteLine("Index out of range in WriteNode: " + e); }
+                { Console.WriteLine("Index out of range in SaveEdge: " + e); }
                 catch (Exception e)
-                { Console.WriteLine("Error in WriteNode: " + e); }
+                { Console.WriteLine("Error in SaveEdge: " + e); }
             }
         }
 
@@ -195,23 +201,21 @@ namespace WebCompare3.Model
                     using (BinaryReader reader = new BinaryReader(fs))
                     {
                         long len = fs.Length;
-                        for (int id = 0; id < len / VertexByteLength; id += VertexByteLength)
+                        // IDs start at 1
+                        for (int id = 1; id < len / VertexByteLength; ++id)
                         {
                             readVertex = null; // Clear vertex
-                            readVertex = new Vertex(id / VertexByteLength);
-                            fs.Seek(id, SeekOrigin.Begin);
+                            readVertex = new Vertex(id);
+                            fs.Seek(id * VertexByteLength, SeekOrigin.Begin);
                             // Get Vertex data from file
                             readVertex.Data = reader.ReadString();
                             for (int n = 0; n < Vertex.NumberOfNeighbors; ++n)
                             {
-                                if (n != 0)
-                                {
-                                    int n1 = reader.ReadInt32();
-                                    int n2 = reader.ReadInt32();
-                                    float w = reader.ReadInt64();
-                                    int nid = reader.ReadInt32();
-                                    readVertex.Neighbors.Add(new Edge(n1, n2, w, nid));
-                                }
+                                int n1 = reader.ReadInt32();
+                                int n2 = reader.ReadInt32();
+                                float w = reader.ReadSingle();
+                                int nid = reader.ReadInt32();
+                                readVertex.Neighbors.Add(new Edge(n1, n2, w, nid));
                             }
                             // Add vertex to this graph
                             this.AddVertex(readVertex);
@@ -222,7 +226,8 @@ namespace WebCompare3.Model
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error trying to load vertices from disk, please reload Graph. \nError: " + e, "Model:Graph:LoadAllVertices()", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Error trying to load vertices from disk, please reload Graph.", "Model:Graph:LoadAllVertices()", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Console.WriteLine("Error trying to load vertices from disk, please reload Graph. \n\nError: " + e);
                 return false;
             }
             return success;
@@ -252,7 +257,7 @@ namespace WebCompare3.Model
                             fs.Seek(id, SeekOrigin.Begin);
                             int n1 = reader.ReadInt32();
                             int n2 = reader.ReadInt32();
-                            float w = reader.ReadInt64();
+                            float w = reader.ReadSingle();
                             readEdge = new Edge(n1, n2, w, id / EdgeByteLength);
                             this.AddEdge(readEdge);
                         } // End for loop
@@ -295,13 +300,14 @@ namespace WebCompare3.Model
         {
             this.id = id;
             this.data = data;
+            this.neighbors = new List<Edge>();
             this.Cost = float.MaxValue;
         }
         public Vertex(int id)
         {
             this.id = id;
             data = "";
-            neighbors = null;
+            this.neighbors = new List<Edge>();
             this.Cost = float.MaxValue;
         }
         #region Vertex Properties

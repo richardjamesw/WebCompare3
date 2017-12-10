@@ -14,24 +14,16 @@ namespace WebCompare3.Model
 {
     public class WebCompareModel
     {
-        // Websites
-        private static string[] websites = {
-            "https://petscan.wmflabs.org/?format=csv&psid=1356388",    // Sports
-            "https://petscan.wmflabs.org/?format=csv&psid=1356389",    // Calculus
-            "https://petscan.wmflabs.org/?format=csv&psid=1356390",    // Geography
-            "https://petscan.wmflabs.org/?format=csv&psid=1356391",    // History
-            "https://petscan.wmflabs.org/?format=csv&psid=1356392",    // Music   
+        public static string[] RootSites =
+        {
+            "https://en.wikipedia.org/wiki/Computer_engineering",
+            "https://en.wikipedia.org/wiki/Computer_performance",
+            "https://en.wikipedia.org/wiki/Concurrency_(computer_science)",
+            "https://en.wikipedia.org/wiki/Computer_network",
+            "https://en.wikipedia.org/wiki/Computer_security"
         };
 
         public enum SitesEnum {Sports, Calculus, Geography, History, Music};
-
-        public static string[] Websites
-        {
-            get
-            {
-                return websites;
-            }
-        }
 
         #region Helper Methods
 

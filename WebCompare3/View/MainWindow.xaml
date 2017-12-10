@@ -47,14 +47,15 @@
         </WrapPanel>
 
 
-        <!-- List of Websites -->
+    <!-- List of Websites 
         <ListBox x:Name="lstWebsites" Visibility="Collapsed" ItemsSource="{Binding ListWebsites}" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="300" Margin="10" />
-
+    -->
+        
         <!-- Status label -->
         <TextBlock Style="{DynamicResource BasicTextStyle}" Grid.Column="1" Text="Status:" Margin="20, 0, 0, 0" VerticalAlignment="Center"/>
 
         <!-- Website Data Received -->
-      <ComboBox Name="cmbGraphSites" ItemsSource="{Binding GraphSites}" SelectedItem="{Binding GraphSitesSelected}" Grid.Column="0" Grid.Row="2" 
+      <ListBox Name="cmbGraphSites" ItemsSource="{Binding GraphSites}" SelectedItem="{Binding GraphSitesSelected}" Grid.Column="0" Grid.Row="2" 
                 HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="10" Width="350" />
 
       <!-- Status box -->

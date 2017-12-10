@@ -274,7 +274,7 @@ namespace WebCompare3.Model
         {
             try
             {
-                var cd = Directory.CreateDirectory("tablebin\\");
+                Directory.CreateDirectory("tablebin\\");
                 string FileName = $"tablebin\\table{num}.bin";
                 using (Stream TestFileStream = File.Create(FileName))
                 {
