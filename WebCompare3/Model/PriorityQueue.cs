@@ -17,7 +17,7 @@ namespace WebCompare3.Model
         public PriorityQueue(List<Vertex> list)
         {
             arr = list;
-            Size = arr.Count;
+            Size = arr.Count - 1;
         }
 
         // Build
@@ -71,12 +71,13 @@ namespace WebCompare3.Model
         //left of
         int LeftOf(int k)
         {
-            return 2 * k - 1;
+            return 2 * k + 1;
         }
 
         // Parent Of
         static int ParentOf(int k)
         {
+            if (k == 0) return 0;
             return (k - 1) / 2;   // Divide by 2
         }
 
@@ -94,14 +95,13 @@ namespace WebCompare3.Model
 
             // Bubble down
             int k = 0;
-            // While there are more children or costs are not inifinity
-            while (LeftOf(k) < Size || arr[LeftOf(k)].Cost < float.MaxValue)
+            // While there are more children
+            while (LeftOf(k) < Size)
             {
                 // Look at children
                 // swap with lower
                 int l = LeftOf(k);
                 int r = l + 1;
-                if (l >= Size) break;
 
                 Vertex left = arr[l];
                 if (r > Size)
@@ -151,7 +151,7 @@ namespace WebCompare3.Model
         {
             // Throw it at the end
             int k = Size;
-            arr[Size] = e;
+            arr.Add(e);
             ++Size;
             // Bubble up
             while (k != 0)
@@ -159,12 +159,6 @@ namespace WebCompare3.Model
                 int p = ParentOf(k);
                 Vertex child = arr[k];
                 Vertex parent = arr[p];
-                // Skip infinities
-                while (parent.Cost == float.MaxValue)
-                {
-                    p = ParentOf(p);
-                    parent = arr[p];
-                }
 
                 if(child.Cost < parent.Cost)
                 {

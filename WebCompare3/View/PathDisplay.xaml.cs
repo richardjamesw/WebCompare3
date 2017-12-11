@@ -77,28 +77,29 @@ namespace WebCompare3.View
                 // Reset location variables
                 double newX = CenterX;
                 double newY = CenterY;
+                int DIST = 10;
                 for (int n = 0; n < paths[p].Count(); ++n)
                 {
                     switch(p)
                     {
                         case 0:
-                            newX += 5;
-                            newY += 5;
+                            newX += DIST;
+                            newY += DIST;
                             break;
                         case 1:
-                            newX += 5;
-                            newY -= 5;
+                            newX += DIST;
+                            newY -= DIST;
                             break;
                         case 2:
-                            newX -= 5;
-                            newY -= 5;
+                            newX -= DIST;
+                            newY -= DIST;
                             break;
                         case 3:
-                            newX -= 5;
-                            newY += 5;
+                            newX -= DIST;
+                            newY += DIST;
                             break;
                         default:
-                            newX += 5;
+                            newX += DIST;
                             newY = CenterY;
                             break;
                     }

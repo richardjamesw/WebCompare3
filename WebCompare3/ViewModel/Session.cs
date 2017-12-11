@@ -82,7 +82,8 @@ namespace WebCompare3.ViewModel
         {
             // Get selected site
             string selected = WebCompareViewModel.Instance.GraphSitesSelected;
-            Vertex selectedVert = LoaderViewModel.Instance.MainGraph.GetVertexWithData(selected);
+            Vertex newVert = LoaderViewModel.Instance.MainGraph.GetVertexWithData(selected);
+            Vertex selectedVert = newVert;
             // Use dijkstras to find shortest path
             List<int>[] paths = new List<int>[5];
             for (int r = 0; r < 5; ++r)
@@ -93,9 +94,15 @@ namespace WebCompare3.ViewModel
             }
 
             // Graphically display the path
-            PathDisplay pd = new PathDisplay();
-            pd.SrcText = selectedVert.ID.ToString();
-            pd.ShowPaths(paths);
+            Application.Current.Dispatcher.Invoke((Action)delegate {
+
+                PathDisplay pd = new PathDisplay();
+                if (selectedVert != null)
+                    pd.SrcText = selectedVert.ID.ToString();
+                pd.ShowPaths(paths);
+
+            }); // End dispatcher
+            
         }
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -115,7 +122,7 @@ namespace WebCompare3.ViewModel
         private void AddMessage(string s)
         {
             if (s.Equals("")) wcViewModel.Status = "";
-            else wcViewModel.Status += s;
+            else wcViewModel.Status += "\n" + s;
         }
 
 
@@ -132,7 +139,10 @@ namespace WebCompare3.ViewModel
             try
             {
                 // Check if valid src
-                if (!LoaderViewModel.Instance.MainGraph.Vertices.Contains(src)) return null;
+                if (!LoaderViewModel.Instance.MainGraph.Vertices.Contains(src))
+                {
+                    LoaderViewModel.Instance.MainGraph.AddVertex(src);
+                }
                 // The output variable
                 output = new List<int>();
 
@@ -147,7 +157,7 @@ namespace WebCompare3.ViewModel
                 // While PQ is not empty
                 Vertex polld, next;
                 int temp_index;
-                while (!Q.IsEmpty())
+                while (Q.Size > 0)
                 {
                     //// Poll (remove root slot)
                     polld = Q.Poll();
@@ -165,10 +175,12 @@ namespace WebCompare3.ViewModel
                     {
                         // Get next vertex & its index in Q
                         next = Q.GetVertex(polld.Neighbors[i].Node2);
+                        if (next == null) break; // End of neighbor list
                         temp_index = Q.IndexOf(next);
 
                         // Skip src
-                        if (next.Cost == 0) continue;
+                        if (next.Cost == 0)
+                            continue;
 
                         // If cost from src to (p + (cost from p to e)) < next.Cost
                         float alternateDist = polld.Cost + polld.Neighbors[i].Weight;
@@ -182,9 +194,9 @@ namespace WebCompare3.ViewModel
                     }
                 }
             } // End try
-            catch (Exception e)
+            catch (Exception err)
             {
-                Console.WriteLine("Error in Dijkstra's: " + e);
+                Console.WriteLine("Error in Dijkstra's: " + err);
             }
 
             return output;

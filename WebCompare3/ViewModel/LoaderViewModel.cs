@@ -355,6 +355,12 @@ namespace WebCompare3.ViewModel
                     mainGraph.SaveEdge(e);  // Write edge to disk
                 }
                 // Add Vertex to graph
+                // Add eachother as neighbors
+                v.Neighbors.Add(e);
+                v2.Neighbors.Add(new Edge(v2.ID, v.ID, (float)sim, ++EdgeNumber));
+                // Update/Add to graph
+                mainGraph.AddVertex(v);
+                mainGraph.AddVertex(v2); 
                 mainGraph.AddVertex(v);
                 mainGraph.SaveVertex(v);
                 --siteCount;
