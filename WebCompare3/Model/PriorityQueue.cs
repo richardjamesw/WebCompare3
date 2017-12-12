@@ -16,47 +16,52 @@ namespace WebCompare3.Model
         //constructor
         public PriorityQueue(List<Vertex> list)
         {
-            arr = list;
-            Size = arr.Count - 1;
+            arr = new List<Vertex>();
+            foreach(Vertex v in list)
+            {
+                v.Cost = float.MaxValue;
+                arr.Add(v);
+            }
+            Size = arr.Count;
         }
 
-        // Build
-        public void BuildHeap()
-        {
-            for (int i = Size / 2; i >= 0; --i)
-            {
-                QAdd(i);
-            }
-        }
+        //// Build
+        //public void BuildHeap()
+        //{
+        //    for (int i = Size / 2; i >= 0; --i)
+        //    {
+        //        QAdd(i);
+        //    }
+        //}
 
-        // Rearrange
-        public void QAdd(int parent)
-        {
-            int left = 2 * parent + 1;
-            int right = left + 1;
-            int largest;
-            // left child
-            if (left < Size && arr[left].Cost > arr[parent].Cost)
-            {
-                largest = left;
-            }
-            else
-            {
-                largest = parent;
-            }
-            // right child
-            if (right < Size && arr[right].Cost > arr[largest].Cost)
-            {
-                largest = right;
-            }
-            // Swap if diff
-            if (largest != parent)
-            {
-                Vertex t = arr[parent];
-                arr[parent] = arr[largest];
-                arr[largest] = t;
-            }
-        }
+        //// Rearrange
+        //public void QAdd(int parent)
+        //{
+        //    int left = 2 * parent + 1;
+        //    int right = left + 1;
+        //    int largest;
+        //    // left child
+        //    if (left < Size && arr[left].Cost > arr[parent].Cost)
+        //    {
+        //        largest = left;
+        //    }
+        //    else
+        //    {
+        //        largest = parent;
+        //    }
+        //    // right child
+        //    if (right < Size && arr[right].Cost > arr[largest].Cost)
+        //    {
+        //        largest = right;
+        //    }
+        //    // Swap if diff
+        //    if (largest != parent)
+        //    {
+        //        Vertex t = arr[parent];
+        //        arr[parent] = arr[largest];
+        //        arr[largest] = t;
+        //    }
+        //}
         
         // PQ
         // Min
@@ -91,12 +96,14 @@ namespace WebCompare3.Model
             if (Size == 0) return null;
             // Pop root, move last to top
             Vertex x = arr[0];
-            arr[0] = arr[--Size];
+            arr[0] = arr[Size-1];
+            arr.RemoveAt(Size-1);
+            --Size;
 
             // Bubble down
             int k = 0;
             // While there are more children
-            while (LeftOf(k) < Size)
+            while (LeftOf(k) < Size - 1)
             {
                 // Look at children
                 // swap with lower
@@ -104,7 +111,7 @@ namespace WebCompare3.Model
                 int r = l + 1;
 
                 Vertex left = arr[l];
-                if (r > Size)
+                if (r > Size - 1)
                 {
                     // if left Vertex is smaller than bubbling Vertex
                     if (left.Cost < arr[k].Cost)
@@ -121,7 +128,7 @@ namespace WebCompare3.Model
                 {
                     // swap bubbling Vertex with smaller Vertex
                     Vertex right = arr[r];
-                    int least = (left.Cost < right.Cost) ? l : r;
+                    int least = (right.Cost < left.Cost) ? r  : l;
                     
                     if (arr[least].Cost < arr[k].Cost)
                     {
@@ -129,6 +136,11 @@ namespace WebCompare3.Model
                         Vertex t = arr[least];
                         arr[least] = arr[k];
                         arr[k] = t;
+                    }
+                    else
+                    {
+                        // already in correct spot
+                        return x;
                     }
                     k = least;
                 }
@@ -150,17 +162,24 @@ namespace WebCompare3.Model
         public void Add(Vertex e)
         {
             // Throw it at the end
-            int k = Size;
             arr.Add(e);
             ++Size;
+            int k = Size - 1;
             // Bubble up
             while (k != 0)
             {
                 int p = ParentOf(k);
-                Vertex child = arr[k];
                 Vertex parent = arr[p];
 
-                if(child.Cost < parent.Cost)
+                // switch with other child then check parent
+                // add it as a child instead of leaving under all the inifities
+                if (arr[k].Cost < arr[LeftOf(p)].Cost)
+                {
+                    this.Exchange(k, LeftOf(p));
+                    k = LeftOf(p);
+                }
+
+                if (arr[k].Cost < parent.Cost)
                 {
                     // Swap
                     this.Exchange(k, p);
@@ -168,9 +187,6 @@ namespace WebCompare3.Model
                 }
                 else
                 {
-                    // add it as a child instead of leaving under all the inifities
-                    this.Exchange(k, LeftOf(p));
-                    k = LeftOf(p);
                     break;
                 }
             } // End while
@@ -180,7 +196,8 @@ namespace WebCompare3.Model
 
         public void Reweight(Vertex next)
         {
-            this.Arr.Remove(next);
+            this.Arr.RemoveAll(lam => lam.ID == next.ID);
+            --this.Size;
             this.Add(next);
         }
 

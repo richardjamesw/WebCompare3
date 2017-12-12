@@ -24,7 +24,7 @@ namespace WebCompare3.ViewModel
         const int MAXSITES = 200;   // Max sites per root
         const int MAXLEVELS = 20;
         const int MAXSEEDS = 10;   // Max number of sites from each site
-        int siteCount = MAXSITES;
+        int siteCount = 0;
         int levelCount = MAXLEVELS;
 
         int TableNumber = 0;
@@ -149,17 +149,21 @@ namespace WebCompare3.ViewModel
            
             try
             {
-                string graphDir = @"graphbin\";
-                string tableDir = @"tablebin\";
-                string treeDir = @"treebin\";
-                if (Directory.Exists(graphDir))
-                    Directory.Delete(graphDir, true);
+                var result = MessageBox.Show("Do you want to remove old stored data?", "", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    string graphDir = @"graphbin\";
+                    string tableDir = @"tablebin\";
+                    string treeDir = @"treebin\";
+                    if (Directory.Exists(graphDir))
+                        Directory.Delete(graphDir, true);
 
-                if (Directory.Exists(tableDir))
-                    Directory.Delete(tableDir, true);
+                    if (Directory.Exists(tableDir))
+                        Directory.Delete(tableDir, true);
 
-                if (Directory.Exists(treeDir))
-                    Directory.Delete(treeDir, true);
+                    if (Directory.Exists(treeDir))
+                        Directory.Delete(treeDir, true);
+                }
             }
             catch (Exception exc)
             {
@@ -229,29 +233,34 @@ namespace WebCompare3.ViewModel
             try
             {
                 // Seed site graph construction with Computer Science related sites
-                AddMessage("Root being added.");
-                roots.Add(new Root("Computer Engineering", BuildGraph(WebCompareModel.RootSites[0], null)));
+                AddMessage("Building graph\nfirst seed started ");
+                Vertex rootNode = BuildGraph(WebCompareModel.RootSites[0], null);
+                roots.Add(new Root("Computer Engineering", rootNode));
 
                 // Reset counters
-                siteCount = MAXSITES;
+                siteCount = 0;
                 levelCount = MAXLEVELS;
-                AddMessage("Root being added.");
-                roots.Add(new Root("Computer Performance", BuildGraph(WebCompareModel.RootSites[1], null)));
+                AddMessage("second seed started ");
+                rootNode = BuildGraph(WebCompareModel.RootSites[1], rootNode);
+                roots.Add(new Root("Computer Performance", rootNode));
 
-                siteCount = MAXSITES;
+                siteCount = 0;
                 levelCount = MAXLEVELS;
-                AddMessage("Root being added.");
-                roots.Add(new Root("Concurrency", BuildGraph(WebCompareModel.RootSites[2], null)));
+                AddMessage("third seed started ");
+                rootNode = BuildGraph(WebCompareModel.RootSites[2], rootNode);
+                roots.Add(new Root("Concurrency", rootNode));
 
-                siteCount = MAXSITES;
+                siteCount = 0;
                 levelCount = MAXLEVELS;
-                AddMessage("Root being added.");
-                roots.Add(new Root("Computer Networking", BuildGraph(WebCompareModel.RootSites[3], null)));
+                AddMessage("fourth seed started ");
+                rootNode = BuildGraph(WebCompareModel.RootSites[3], rootNode);
+                roots.Add(new Root("Computer Networking", rootNode));
 
-                siteCount = MAXSITES;
+                siteCount = 0;
                 levelCount = MAXLEVELS;
-                AddMessage("Root being added.");
-                roots.Add(new Root("Computer Security", BuildGraph(WebCompareModel.RootSites[4], null)));
+                AddMessage("fifth seed started ");
+                rootNode = BuildGraph(WebCompareModel.RootSites[4], rootNode);
+                roots.Add(new Root("Computer Security", rootNode));
 
                 // Report number of Spanning Trees for an arbitrary node
                 Console.WriteLine("Loading complete.");
@@ -315,7 +324,7 @@ namespace WebCompare3.ViewModel
             // Decrement count because we just went down a level
             --levelCount;
             sim = 0;
-            if (siteCount < 1)
+            if (siteCount >= MAXSITES)
                 return null;
             try
             {
@@ -347,23 +356,26 @@ namespace WebCompare3.ViewModel
                     // Calc similiarty to parent
                     HTable parentTable = LoadTable(parent.ID);
                     List<object>[] vector = WebCompareModel.BuildVector(vTable, parentTable);
-                    //// Calcualte similarity
-                    sim = (float)WebCompareModel.CosineSimilarity(vector);
+                    //// Calcualte similarity, 1 minus for shortest path calculation, lower numbers are more similar
+                    sim = 1 - (float)WebCompareModel.CosineSimilarity(vector);
                     //Create edge to parent
-                    Edge e = new Edge(parent.ID, v.ID, sim, ++EdgeNumber);
-                    mainGraph.AddEdge(e);   // Add edge to Graph list
-                    mainGraph.SaveEdge(e);  // Write edge to disk
+                    Edge e1 = new Edge(parent.ID, v.ID, sim, ++EdgeNumber);
+                    Edge e2 = new Edge(v.ID, parent.ID, sim, ++EdgeNumber);
+                    mainGraph.AddEdge(e1);   // Add edge to Graph list
+                    mainGraph.SaveEdge(e1);  // Write edge to disk
+                    mainGraph.AddEdge(e2);   // Add edge to Graph list
+                    mainGraph.SaveEdge(e2);  // Write edge to disk
+                    // Add eachother as neighbors
+                    parent.AddNeighbor(e1);
+                    v.AddNeighbor(e2);
+                    // Update parent vertex
+                    mainGraph.AddVertex(parent);
+                    mainGraph.SaveVertex(parent);
                 }
-                // Add Vertex to graph
-                // Add eachother as neighbors
-                v.Neighbors.Add(e);
-                v2.Neighbors.Add(new Edge(v2.ID, v.ID, (float)sim, ++EdgeNumber));
                 // Update/Add to graph
                 mainGraph.AddVertex(v);
-                mainGraph.AddVertex(v2); 
-                mainGraph.AddVertex(v);
                 mainGraph.SaveVertex(v);
-                --siteCount;
+                ++siteCount;
                 
                 // Add list of sites to this vertex
                 //// Forach- add, recursively call this method
@@ -383,16 +395,16 @@ namespace WebCompare3.ViewModel
                         if (v2Table != null)
                         {
                             List<object>[] vector = WebCompareModel.BuildVector(vTable, v2Table);
-                            //// Calcualte similarity
-                            sim = (float)WebCompareModel.CosineSimilarity(vector);
+                            //// Calcualte similarity, 1 minus for shortest path calculation, lower numbers are more similar
+                            sim = 1 - (float)WebCompareModel.CosineSimilarity(vector);
                             //Create edge to parent
                             Edge e = new Edge(v.ID, v2.ID, (float)sim, ++EdgeNumber);
                             mainGraph.AddEdge(e);   // Add edge to Graph list
                             mainGraph.SaveEdge(e);  // Write edge to disk
                             
                             // Add eachother as neighbors
-                            v.Neighbors.Add(e);
-                            v2.Neighbors.Add(new Edge(v2.ID, v.ID, (float)sim, ++EdgeNumber));
+                            v.AddNeighbor(e);
+                            v2.AddNeighbor(new Edge(v2.ID, v.ID, (float)sim, ++EdgeNumber));
                             // Update/Add to graph
                             mainGraph.AddVertex(v);
                             mainGraph.AddVertex(v2);
@@ -420,7 +432,7 @@ namespace WebCompare3.ViewModel
                         if (neighb != null)
                         {
                             Edge newEdge = new Edge(v.ID, neighb.ID, simout, EdgeNumber++);
-                            v.Neighbors.Add(newEdge);
+                            v.AddNeighbor(newEdge);
                             mainGraph.SaveEdge(newEdge);
                         }
                         
@@ -464,7 +476,8 @@ namespace WebCompare3.ViewModel
                     if (att.Value != null && att.Value.StartsWith(@"/wiki/") && !sites.Contains("https://en.wikipedia.org" + att.Value)
                         && !att.Value.Contains("File:") && !att.Value.Contains("Template:") && !att.Value.Contains("Wikipedia:") && !att.Value.Contains("Wikipedia_")
                         && !att.Value.Contains("Help:") && !att.Value.Contains("Portal:") && !att.Value.Contains("Talk:")
-                        && !att.Value.Contains("Help:") && !att.Value.Contains("Category:"))
+                        && !att.Value.Contains("Help:") && !att.Value.Contains("Category:") && !att.Value.Contains("Special:")
+                        && !att.Value.Contains("Media:") && !att.Value.Contains("MediaWiki:") && !att.Value.Contains("User:"))
                     {
                         sites.Add("https://en.wikipedia.org" + att.Value);
                     }

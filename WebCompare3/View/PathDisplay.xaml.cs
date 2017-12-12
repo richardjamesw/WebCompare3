@@ -26,24 +26,33 @@ namespace WebCompare3.View
         }
 
         // Window center coordinates
-        double centerY = 250;
-        double centerX = 250;
+        double centerY = 470;
+        double centerX = 470;
         public double CenterY { get { return centerY; } set { centerY = value; } }
         public double CenterX { get { return centerX; } set { centerX = value; } }
         public string SrcText { get; set; }
 
-        private void AddNodeWithLabel(double x, double y, string txt)
+        private void AddNodeWithLabel(double x, double y, double oldX, double oldY, string txt)
         {
             // Output variables
             var node = new Ellipse {
-                Width = 20, Height = 20,
+                Width = 30, Height = 30,
                 Fill = Brushes.Red
             };
 
             var nodeLabel = new TextBlock {
                 Text = txt,
                 Width = 20, Height = 20,
-                TextAlignment = TextAlignment.Center
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(5,5,0,0)
+            };
+
+            var line = new Line
+            {
+                X1 = oldX, X2 = x,
+                Y1 = oldY, Y2 = y,
+                Stroke = Brushes.Black,
+                Margin = new Thickness(15, 5, 0, 0)
             };
             // Location
             Canvas.SetLeft(node, x); Canvas.SetTop(node, y);
@@ -53,6 +62,7 @@ namespace WebCompare3.View
             Panel.SetZIndex(nodeLabel, 1);
             PathCanvas.Children.Add(node);
             PathCanvas.Children.Add(nodeLabel);
+            PathCanvas.Children.Add(line);
         }
 
         public void ShowPaths(List<int>[] paths)
@@ -62,8 +72,8 @@ namespace WebCompare3.View
             this.Show();
 
             // Update XY coordinates to window center
-            CenterY = this.Height / 2;
-            CenterX = this.Width / 2;
+            CenterY = this.Height / 2 - 30;
+            CenterX = this.Width / 2 - 30;
 
             // Center selected 
 
@@ -74,10 +84,13 @@ namespace WebCompare3.View
             // Display paths
             for (int p = 0; p < paths.Count(); ++p)
             {
+                if (paths[p] == null) continue;
                 // Reset location variables
+                double oldX = CenterX, oldY = CenterY;
                 double newX = CenterX;
                 double newY = CenterY;
-                int DIST = 10;
+                int DIST = 40;
+
                 for (int n = 0; n < paths[p].Count(); ++n)
                 {
                     switch(p)
@@ -105,7 +118,8 @@ namespace WebCompare3.View
                     }
                     
                     // Add nodes to the canvas
-                    AddNodeWithLabel(newX, newY, paths[p][n].ToString());
+                    AddNodeWithLabel(newX, newY, oldX, oldY, paths[p][n].ToString());
+                    oldX = newX; oldY = newY;
                 }
             } // End display paths foreach
         } // End ShowPaths()

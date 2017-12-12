@@ -82,8 +82,8 @@ namespace WebCompare3.ViewModel
         {
             // Get selected site
             string selected = WebCompareViewModel.Instance.GraphSitesSelected;
-            Vertex newVert = LoaderViewModel.Instance.MainGraph.GetVertexWithData(selected);
-            Vertex selectedVert = newVert;
+            Vertex selectedVert = LoaderViewModel.Instance.MainGraph.GetVertexWithData(selected);
+            AddMessage("Selected source: " + selectedVert.Data);
             // Use dijkstras to find shortest path
             List<int>[] paths = new List<int>[5];
             for (int r = 0; r < 5; ++r)
@@ -92,7 +92,8 @@ namespace WebCompare3.ViewModel
                 AddMessage("Searching for path to: " + LoaderViewModel.Instance.Roots[r].Name);
                 paths[r] = DijkstraShortestPath(selectedVert, LoaderViewModel.Instance.Roots[r].RootVertex);
             }
-
+            AddMessage("Found all available paths.");
+            AddMessage("Displaying..\n\n");
             // Graphically display the path
             Application.Current.Dispatcher.Invoke((Action)delegate {
 
@@ -126,7 +127,6 @@ namespace WebCompare3.ViewModel
         }
 
 
-
         /// <summary>
         /// Use Dijkstras to find any root
         /// </summary>
@@ -147,7 +147,8 @@ namespace WebCompare3.ViewModel
                 output = new List<int>();
 
                 // Add all nodes to PQ (Cost MaxValue at this point)
-                PriorityQueue Q = new PriorityQueue(LoaderViewModel.Instance.MainGraph.Vertices);
+                PriorityQueue Q = null;
+                Q = new PriorityQueue(LoaderViewModel.Instance.MainGraph.Vertices);
                 // Set source Cost to 0
                 int src_index = Q.IndexOf(src);
                 Q[src_index].Cost = 0;
@@ -155,28 +156,44 @@ namespace WebCompare3.ViewModel
                 Q.Exchange(0, src_index);
 
                 // While PQ is not empty
-                Vertex polld, next;
-                int temp_index;
-                while (Q.Size > 0)
+                Vertex polld = new Vertex(0);
+                Vertex next;
+
+                //int temp_index;
+                while (Q.Size > 0 && polld.ID != dst.ID)
                 {
                     //// Poll (remove root slot)
+                    polld = null;
                     polld = Q.Poll();
+                    if (polld == null) return output;
+
                     // Add to output unless we are at a disconnected vertex
                     if (polld.Cost != float.MaxValue)
-                        output.Add(polld.ID);
+                    {
+                        // Don't add source
+                        if (polld.Cost > 0)
+                            output.Add(polld.ID);
+                    }
                     else
-                        return output;
+                    {
+                        continue;
+                    }
 
                     // If we have found a cluster center return Path
-                    if (polld == dst) return output;
+                    if (polld.ID == dst.ID)
+                        return output;
 
                     // For each surrounding edge
                     for (int i = 0; i < polld.Neighbors.Count; ++i)
                     {
+                        // End of neighbors
+                        if (polld.Neighbors[i].ID == 0) break;
+
                         // Get next vertex & its index in Q
+                        next = null;
                         next = Q.GetVertex(polld.Neighbors[i].Node2);
                         if (next == null) break; // End of neighbor list
-                        temp_index = Q.IndexOf(next);
+                        // temp_index = Q.IndexOf(next);
 
                         // Skip src
                         if (next.Cost == 0)

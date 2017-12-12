@@ -5,13 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WebCompare3.View"
         mc:Ignorable="d"
-        Title="PathDisplay" Height="500" Width="500">
+        Title="PathDisplay" Height="1000" Width="1000">
 
 
     <Canvas Name="PathCanvas">
         <!-- Source node selected by the user -->
-        <TextBlock Text="{Binding SrcText}" Height="20" Width="20" Canvas.Top="{Binding CenterY}" Canvas.Left="{Binding CenterX}" Panel.ZIndex="1" TextAlignment="Center"/>
-        <Ellipse Height="20" Width="20" Canvas.Top="{Binding CenterY}" Canvas.Left="{Binding CenterX}" Fill="Red" Panel.ZIndex="0"/>
+        <TextBlock Text="{Binding SrcText}" Height="20" Width="20" Canvas.Top="{Binding CenterY}" Canvas.Left="{Binding CenterX}" Panel.ZIndex="1" TextAlignment="Center" Margin="5, 5, 0, 0"/>
+        <Ellipse Height="30" Width="30" Canvas.Top="{Binding CenterY}" Canvas.Left="{Binding CenterX}" Fill="Red" Panel.ZIndex="0"/>
     </Canvas>
 
 </Window>

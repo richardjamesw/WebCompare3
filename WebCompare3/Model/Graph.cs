@@ -50,11 +50,8 @@ namespace WebCompare3.Model
         {
             if (Vertices == null) return;
 
-            if (Vertices.Contains(newVertex))
-            {
-                // Remove old value
-                Vertices.RemoveAll(vert => vert.ID == newVertex.ID);
-            }
+            // Remove old value
+            Vertices.RemoveAll(vert => vert.ID == newVertex.ID);
             // Add new (updated) value
             Vertices.Add(newVertex);
         }
@@ -66,6 +63,7 @@ namespace WebCompare3.Model
         /// <param name="newEdge"></param>
         public void AddEdge(Edge newEdge)
         {
+            return;
             this.edges.Add(newEdge);
         }
 
@@ -151,6 +149,7 @@ namespace WebCompare3.Model
         /// <param name="edge"></param>
         public void SaveEdge(Edge edge)
         {
+            return;
             string FileDir = @"graphbin\";
             string FileName = FileDir + "edges.bin";
             Directory.CreateDirectory(FileDir);
@@ -343,6 +342,12 @@ namespace WebCompare3.Model
         // Properties for Priority Queue
         public float Cost { get; set; }
         public int Index { get; set; }
+
+        public void AddNeighbor(Edge edge)
+        {
+            this.Neighbors.RemoveAll(lam => lam.Node1 == edge.Node1 && lam.Node2 == edge.Node2);
+            this.Neighbors.Add(edge);
+        }
         #endregion
     } // End Vertex
 
