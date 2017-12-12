@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,18 +19,39 @@ namespace WebCompare3.View
     /// <summary>
     /// Interaction logic for PathDisplay.xaml
     /// </summary>
-    public partial class PathDisplay : Window
+    public partial class PathDisplay : Window, INotifyPropertyChanged
     {
         public PathDisplay()
         {
             InitializeComponent();
         }
 
+        #region INotifyPropertyChanged
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(string str)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(str));
+            }
+        }
+        #endregion
+
         // Window center coordinates
         double centerY = 470;
         double centerX = 470;
-        public double CenterY { get { return centerY; } set { centerY = value; } }
-        public double CenterX { get { return centerX; } set { centerX = value; } }
+        public double CenterY {
+            get { return centerY; }
+            set { centerY = value;
+                NotifyPropertyChanged("CenterY");
+            }
+        }
+        public double CenterX {
+            get { return centerX; }
+            set { centerX = value;
+                NotifyPropertyChanged("CenterX");
+            }
+        }
         public string SrcText { get; set; }
 
         private void AddNodeWithLabel(double x, double y, double oldX, double oldY, string txt)

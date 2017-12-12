@@ -63,7 +63,6 @@ namespace WebCompare3.Model
         /// <param name="newEdge"></param>
         public void AddEdge(Edge newEdge)
         {
-            return;
             this.edges.Add(newEdge);
         }
 
@@ -149,7 +148,6 @@ namespace WebCompare3.Model
         /// <param name="edge"></param>
         public void SaveEdge(Edge edge)
         {
-            return;
             string FileDir = @"graphbin\";
             string FileName = FileDir + "edges.bin";
             Directory.CreateDirectory(FileDir);
@@ -282,6 +280,31 @@ namespace WebCompare3.Model
             return Vertices.FirstOrDefault(x => x.Data == d);
 
         }
+
+        public Vertex GetVertexWithID(int id)
+        {
+            return this.Vertices.FirstOrDefault(lam => lam.ID == id);
+        }
+
+        public void UpdateVisited(Vertex updating)
+        {
+            foreach (var v in this.Vertices.Where(lam => lam.ID == updating.ID))
+            {
+                v.Visited = true;
+            }
+        }
+
+        public bool GetVisited()
+        {
+            // See if any nodes have not been visited
+            var x =
+                from vert in Vertices
+                where vert.Visited == false
+                select vert;
+
+            var visits = Vertices.Any(lam => lam.Visited == false);
+            return !visits;
+        }
         #endregion
 
     } // End Graph class
@@ -338,6 +361,13 @@ namespace WebCompare3.Model
             {
                 neighbors = value;
             }
+        }
+        // Poperty for MST
+        private bool visited = false;
+        public bool Visited
+        {
+            get { return visited; }
+            set { visited = value; }
         }
         // Properties for Priority Queue
         public float Cost { get; set; }

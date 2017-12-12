@@ -15,6 +15,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -60,9 +61,12 @@
 
       <!-- Status box -->
         <TextBox Name="tbStatus" TextChanged="tbStatus_TextChanged" Text="{Binding Status, Mode=OneWay}" IsReadOnly="True" Grid.Column="1"  Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="10" Width="350" TextWrapping="Wrap" />
-
-
-
+        
+        <!-- Spanning trees display -->
+        <WrapPanel Grid.Row="3">
+            <TextBlock Text="Minimal Spanning Trees: " Style="{DynamicResource BasicTextStyle}" />
+            <TextBlock Text="{Binding MSTs}" Style="{DynamicResource BasicTextStyle}" />
+        </WrapPanel>
 
     </Grid>
 

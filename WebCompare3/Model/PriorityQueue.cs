@@ -13,11 +13,17 @@ namespace WebCompare3.Model
         public List<Vertex> Arr { get { return arr; } }
         public int Size { get; set; }
 
-        //constructor
+        //constructors
+        public PriorityQueue(Vertex v)
+        {
+            arr = new List<Vertex>();
+            arr.Add(v);
+            Size = arr.Count();
+        }
         public PriorityQueue(List<Vertex> list)
         {
             arr = new List<Vertex>();
-            foreach(Vertex v in list)
+            foreach (Vertex v in list)
             {
                 v.Cost = float.MaxValue;
                 arr.Add(v);
@@ -62,7 +68,7 @@ namespace WebCompare3.Model
         //        arr[largest] = t;
         //    }
         //}
-        
+
         // PQ
         // Min
         Vertex Minimum()
@@ -96,8 +102,8 @@ namespace WebCompare3.Model
             if (Size == 0) return null;
             // Pop root, move last to top
             Vertex x = arr[0];
-            arr[0] = arr[Size-1];
-            arr.RemoveAt(Size-1);
+            arr[0] = arr[Size - 1];
+            arr.RemoveAt(Size - 1);
             --Size;
 
             // Bubble down
@@ -128,8 +134,8 @@ namespace WebCompare3.Model
                 {
                     // swap bubbling Vertex with smaller Vertex
                     Vertex right = arr[r];
-                    int least = (right.Cost < left.Cost) ? r  : l;
-                    
+                    int least = (right.Cost < left.Cost) ? r : l;
+
                     if (arr[least].Cost < arr[k].Cost)
                     {
                         // swap
@@ -194,11 +200,94 @@ namespace WebCompare3.Model
         } // End Add
 
 
-        public void Reweight(Vertex next)
+        public void Reweight(Vertex next, Vertex curr)
         {
-            this.Arr.RemoveAll(lam => lam.ID == next.ID);
-            --this.Size;
-            this.Add(next);
+            try
+            {
+                // Index of next
+                int k = this.Arr.IndexOf(next);
+                // If not found, start at 0
+                if (k == -1) throw new KeyNotFoundException();
+
+
+                // Check if new cost is lower or higher
+                if (next.Cost < curr.Cost)
+                {
+                    // New cost is lower so move it up
+                    while (k != 0)
+                    {
+                        int p = ParentOf(k);
+                        Vertex parent = arr[p];
+
+                        // switch with other child then check parent
+                        if (arr[k].Cost < arr[LeftOf(p)].Cost)
+                        {
+                            this.Exchange(k, LeftOf(p));
+                            k = LeftOf(p);
+                        }
+
+                        if (arr[k].Cost < parent.Cost)
+                        {
+                            // Swap
+                            this.Exchange(k, p);
+                            k = p;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // New cost is higher so move it down
+                    // Bubble down
+                    // While there are more children
+                    while (LeftOf(k) < Size - 1)
+                    {
+                        // Look at children
+                        // swap with lower
+                        int l = LeftOf(k);
+                        int r = l + 1;
+
+                        Vertex left = arr[l];
+                        if (r > Size - 1)
+                        {
+                            // if left Vertex is smaller than bubbling Vertex
+                            if (left.Cost < arr[k].Cost)
+                            {
+                                // swap
+                                Vertex t = arr[l];
+                                arr[l] = arr[k];
+                                arr[k] = t;
+                                k = l;
+                            }
+                            break;
+                        }
+                        else
+                        {
+                            // swap bubbling Vertex with smaller Vertex
+                            Vertex right = arr[r];
+                            int least = (right.Cost < left.Cost) ? r : l;
+
+                            if (arr[least].Cost < arr[k].Cost)
+                            {
+                                // swap
+                                Vertex t = arr[least];
+                                arr[least] = arr[k];
+                                arr[k] = t;
+                            }
+
+                            k = least;
+                        }
+                    } // End while
+                }
+            }
+            catch (KeyNotFoundException e)
+            {
+                Console.WriteLine("PriorityQueue:Reweight(): Tried reweighting with node not found in Queue. \nError: " + e);
+                return;
+            }
         }
 
 
@@ -219,6 +308,7 @@ namespace WebCompare3.Model
         {
             return this.Arr.FirstOrDefault(lam => lam.ID == id);
         }
+
         public int IndexOf(Vertex vert)
         {
             return this.Arr.IndexOf(vert);

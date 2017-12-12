@@ -90,7 +90,7 @@ namespace WebCompare3.ViewModel
             {
                 paths[r] = new List<int>();
                 AddMessage("Searching for path to: " + LoaderViewModel.Instance.Roots[r].Name);
-                paths[r] = DijkstraShortestPath(selectedVert, LoaderViewModel.Instance.Roots[r].RootVertex);
+                paths[r] = Dijkstras(selectedVert, LoaderViewModel.Instance.Roots[r].RootVertex);
             }
             AddMessage("Found all available paths.");
             AddMessage("Displaying..\n\n");
@@ -127,6 +127,58 @@ namespace WebCompare3.ViewModel
         }
 
 
+        public List<int> Dijkstras(Vertex src, Vertex dst)
+        {
+            // Add Graph Vertices to the Q w/ cost infinity
+            PriorityQueue Q = new PriorityQueue(LoaderViewModel.Instance.MainGraph.Vertices);
+            List<int> output = new List<int>();
+
+            // Set source Cost to 0
+            int src_index = Q.IndexOf(src);
+            Q[src_index].Cost = 0;
+            // Move to top
+            Q.Exchange(0, src_index);
+
+            Vertex p, next;
+            // While Q is not empty
+            while (Q.Size > 0)
+            {
+                // Remove lowest from Q
+                p = Q.Poll();
+
+                // Don't add source to output path for display purposes
+                // Also check we dont have a cost of infinity
+                if (p.ID != src.ID && p.Cost < float.MaxValue)
+                {
+                    output.Add(p.ID);
+                    // Found destination?
+                    if (p.ID == dst.ID)
+                        return output;
+                }
+
+                // Foreach neighbor of p
+                for (int i = 0; i < p.Neighbors.Count; ++i)
+                {
+                    if (p.Neighbors[i].ID == 0) break; // No more neighbors
+                    float alternateDist = p.Cost + p.Neighbors[i].Weight; // p cost plus the edge weight
+                    // Get neighbor index and vertex from Q
+                    int neighborNode = p.Neighbors[i].Node2;
+                    next = Q.GetVertex(neighborNode);
+                    // Calc new possible costs
+                    if (next != null)
+                    {
+                        if (alternateDist < next.Cost)
+                        {
+                            next.Cost = alternateDist;
+                            Q.Reweight(next, p);
+                        }
+                    }
+                } // End for
+            } // End while
+            return output;
+        }
+
+
         /// <summary>
         /// Use Dijkstras to find any root
         /// </summary>
@@ -157,7 +209,7 @@ namespace WebCompare3.ViewModel
 
                 // While PQ is not empty
                 Vertex polld = new Vertex(0);
-                Vertex next;
+                Vertex next, last;
 
                 //int temp_index;
                 while (Q.Size > 0 && polld.ID != dst.ID)
@@ -165,12 +217,12 @@ namespace WebCompare3.ViewModel
                     //// Poll (remove root slot)
                     polld = null;
                     polld = Q.Poll();
-                    if (polld == null) return output;
+                    //if (polld == null) return output;
 
-                    // Add to output unless we are at a disconnected vertex
+                    // Add to output unless we are at a disconnected vertex or is the source node
                     if (polld.Cost != float.MaxValue)
                     {
-                        // Don't add source
+                        // Don't add source for display purposes
                         if (polld.Cost > 0)
                             output.Add(polld.ID);
                     }
@@ -186,26 +238,28 @@ namespace WebCompare3.ViewModel
                     // For each surrounding edge
                     for (int i = 0; i < polld.Neighbors.Count; ++i)
                     {
-                        // End of neighbors
-                        if (polld.Neighbors[i].ID == 0) break;
+                        if (polld.Neighbors[i].ID == 0) break; // End of neighbors
+                        next = null; // Clear last node
 
-                        // Get next vertex & its index in Q
-                        next = null;
-                        next = Q.GetVertex(polld.Neighbors[i].Node2);
-                        if (next == null) break; // End of neighbor list
-                        // temp_index = Q.IndexOf(next);
+                        // // Get neeighbor index and vertex from Q
+                        int neighborNode = polld.Neighbors[i].Node2;
+                        next = Q.GetVertex(neighborNode);
 
-                        // Skip src
-                        if (next.Cost == 0)
-                            continue;
+                        // Skip src 
+                        //if (next.Cost == 0)
+                        //    continue;
 
                         // If cost from src to (p + (cost from p to e)) < next.Cost
-                        float alternateDist = polld.Cost + polld.Neighbors[i].Weight;
-                        if (alternateDist < next.Cost)
+                        if (next != null)
                         {
-                            next.Cost = alternateDist;
-                            // Reweight
-                            Q.Reweight(next);
+                            float alternateDist = polld.Cost + polld.Neighbors[i].Weight;
+                            if (alternateDist < next.Cost)
+                            {
+                                next.Cost = alternateDist;
+                                // Reweight
+                                Q.Reweight(next, polld);
+                            }
+                            last = next;
                         }
 
                     }

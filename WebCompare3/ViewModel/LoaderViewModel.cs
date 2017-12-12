@@ -133,7 +133,6 @@ namespace WebCompare3.ViewModel
                 NotifyPropertyChanged("UpdateIsChecked");
             }
         }
-
         #endregion
 
         #region Commands
@@ -207,6 +206,9 @@ namespace WebCompare3.ViewModel
                 }
             }
 
+            // Calculate Minimal Spanning Trees
+            WebCompareViewModel.Instance.MSTs = MST(Roots);
+            
             mw = new MainWindow();
             mw.DataContext = WebCompareViewModel.Instance;
             mw.Show();
@@ -361,10 +363,10 @@ namespace WebCompare3.ViewModel
                     //Create edge to parent
                     Edge e1 = new Edge(parent.ID, v.ID, sim, ++EdgeNumber);
                     Edge e2 = new Edge(v.ID, parent.ID, sim, ++EdgeNumber);
-                    mainGraph.AddEdge(e1);   // Add edge to Graph list
-                    mainGraph.SaveEdge(e1);  // Write edge to disk
-                    mainGraph.AddEdge(e2);   // Add edge to Graph list
-                    mainGraph.SaveEdge(e2);  // Write edge to disk
+                    //mainGraph.AddEdge(e1);   // Add edge to Graph list
+                    //mainGraph.SaveEdge(e1);  // Write edge to disk
+                    //mainGraph.AddEdge(e2);   // Add edge to Graph list
+                    //mainGraph.SaveEdge(e2);  // Write edge to disk
                     // Add eachother as neighbors
                     parent.AddNeighbor(e1);
                     v.AddNeighbor(e2);
@@ -399,8 +401,8 @@ namespace WebCompare3.ViewModel
                             sim = 1 - (float)WebCompareModel.CosineSimilarity(vector);
                             //Create edge to parent
                             Edge e = new Edge(v.ID, v2.ID, (float)sim, ++EdgeNumber);
-                            mainGraph.AddEdge(e);   // Add edge to Graph list
-                            mainGraph.SaveEdge(e);  // Write edge to disk
+                            //mainGraph.AddEdge(e);   // Add edge to Graph list
+                            //mainGraph.SaveEdge(e);  // Write edge to disk
                             
                             // Add eachother as neighbors
                             v.AddNeighbor(e);
@@ -433,7 +435,7 @@ namespace WebCompare3.ViewModel
                         {
                             Edge newEdge = new Edge(v.ID, neighb.ID, simout, EdgeNumber++);
                             v.AddNeighbor(newEdge);
-                            mainGraph.SaveEdge(newEdge);
+                            //mainGraph.SaveEdge(newEdge);
                         }
                         
                     }
@@ -537,6 +539,75 @@ namespace WebCompare3.ViewModel
             return loadedTable;
         }
 
+        public int MST(List<Root> roots)
+        {
+            PriorityQueue Q;
+            int mstCount = 0;
+
+            // Foreach seed vertex
+            foreach (var r in roots)
+            {
+                // Reset PriorityQueue
+                Q = null;
+                Q = new PriorityQueue(MainGraph.Vertices);
+
+                // Set source Cost to 0
+                int src_index = Q.IndexOf(r.RootVertex);
+                Q[src_index].Cost = 0;
+                Q[src_index].Visited = true;
+                MainGraph.UpdateVisited(Q[src_index]);
+                // Move to top
+                Q.Exchange(0, src_index);
+                
+                Vertex p, next;
+                // While Q is not empty
+                while (Q.Size > 0)
+                {
+                    // poll
+                    p = Q.Poll();
+
+                    // If we get null we are disconnected
+                    if (p == null)
+                        break;
+
+                    // for neighbors
+                    for (int i = 0; i < p.Neighbors.Count; ++i)
+                    {
+                        // No more neighbors
+                        if (p.Neighbors[i].ID == 0) break;
+
+                        // edge weight
+                        float dist = p.Neighbors[i].Weight;
+
+                        // Get neighbor index and vertex from Q
+                        int neighborNode = p.Neighbors[i].Node2;
+                        next = Q.GetVertex(neighborNode);
+
+                        // Update visited and cost
+                        if (next != null)
+                        {
+                            next.Cost = dist;
+                            next.Visited = true;
+                            MainGraph.UpdateVisited(next);
+                            Q.Reweight(next, p);
+                        }
+                        else
+                        {
+                            next = MainGraph.GetVertexWithID(neighborNode);
+                            next.Visited = true;
+                            MainGraph.UpdateVisited(next);
+                        }
+                    }
+
+                } // End whle
+
+                // Check if all have been visited yet
+                if (MainGraph.GetVisited())
+                    ++mstCount;
+
+            } // Foreach root
+            return mstCount;
+        }
         #endregion
 
 

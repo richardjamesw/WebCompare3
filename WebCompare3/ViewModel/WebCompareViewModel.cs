@@ -124,6 +124,21 @@ namespace WebCompare3.ViewModel
 
             }
         }
+
+        private int msts = 0;
+        public int MSTs
+        {
+            get
+            {
+                return msts;
+            }
+            set
+            {
+                msts = value;
+                NotifyPropertyChanged("MSTs");
+            }
+        }
+
         #endregion
 
         #region Commands
